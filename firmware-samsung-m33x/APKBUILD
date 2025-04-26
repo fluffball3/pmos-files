@@ -1,0 +1,49 @@
+pkgname=firmware-samsung-m33x
+pkgver=1
+pkgrel=0
+pkgdesc="Firmware for the Samsung Galaxy M33 5G"
+url="https://github.com/fluffball3/firmware"
+arch="aarch64"
+license="proprietary"
+options="!check !archcheck !strip !spdx !tracedeps pmb:cross-native"
+
+# Source
+_repository="firmware"
+_commit="621ade5313385f452c5cc28572875cae0dbe3121"
+_url="https://github.com/fluffball3"
+source="$_repository-$_commit.tar.gz::$_url/$_repository/archive/$_commit.tar.gz"
+
+package() {
+	#VENDOR FILES
+	cd "$srcdir/$_repository-$_commit/firmware/"
+	install -Dm644 abox_tplg.bin \
+		"$pkgdir"/lib/firmware/postmarketos/abox_tplg.bin
+	install -Dm644 APBargeIn_AUDIO_SLSI.bin \
+		"$pkgdir"/lib/firmware/postmarketos/APBargeIn_AUDIO_SLSI.bin
+	install -Dm644 AP_AUDIO_SLSI.bin \
+		"$pkgdir"/lib/firmware/postmarketos/AP_AUDIO_SLSI.bin
+	install -Dm644 calliope_dram.bin \
+		"$pkgdir"/lib/firmware/postmarketos/calliope_dram.bin
+	install -Dm644 calliope_sram.bin \
+		"$pkgdir"/lib/firmware/postmarketos/calliope_sram.bin
+	install -Dm644 dax_param.bin \
+		"$pkgdir"/lib/firmware/postmarketos/dax_param.bin
+	install -Dm644 mfc_fw.bin \
+		"$pkgdir"/lib/firmware/postmarketos/mfc_fw.bin
+	install -Dm644 NPU.bin \
+		"$pkgdir"/lib/firmware/postmarketos/NPU.bin
+	install -Dm644 setfile_gc02m1.bin \
+		"$pkgdir"/lib/firmware/postmarketos/setfile_gc02m1.bin
+	install -Dm644 setfile_gc02m1b.bin \
+		"$pkgdir"/lib/firmware/postmarketos/setfile_gc02m1b.bin
+	install -Dm644 setfile_gc5035.bin \
+		"$pkgdir"/lib/firmware/postmarketos/setfile_gc5035.bin
+	install -Dm644 setfile_imx355.bin \
+		"$pkgdir"/lib/firmware/postmarketos/setfile_imx355.bin
+	install -Dm644 tfa98xx.cnt \
+		"$pkgdir"/lib/firmware/postmarketos/tfa98xx.cnt
+}
+
+sha512sums="
+bd617a68538519a3a223dd50c6b0de5a5147050f10f169af0e96b394376d74a5b09e1c4a8408445715817af5753ecc24e8da05500065dbd3a1be40ab2aa84695  firmware-621ade5313385f452c5cc28572875cae0dbe3121.tar.gz
+"
