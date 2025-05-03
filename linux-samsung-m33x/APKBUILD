@@ -2,7 +2,7 @@
 # Kernel config based on: arch/arm64/configs/(CHANGEME!)
 
 pkgname=linux-samsung-m33x
-pkgver=5.10.234
+pkgver=5.10.236
 pkgrel=0
 pkgdesc="Samsung Galaxy M33 5G kernel"
 arch="aarch64"
@@ -24,23 +24,31 @@ makedepends="
 	cpio
 	python3
 	linux-headers
+	gcc6
 "
-#	clang
-#	llvm
-#	lld
 
-# Compiler: this kernel was only tested with GCC6. Feel free to make a merge
-# request if you find out that it is booting working with newer GCCs as
-# well. See <https://postmarketos.org/vendorkernel> for instructions.
-#if [ "${CC:0:5}" != "gcc6-" ]; then
-#	CC="gcc6-$CC"
-#	HOSTCC="gcc6-gcc"
-#	CROSS_COMPILE="gcc6-$CROSS_COMPILE"
-#fi
+	#clang
+	#clang18
+	#lld18
+	#llvm18
+#	mkdtboimg create "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb" --custom0=0x00000000 --custom1=0xff000000 --version=0 --page_size=2048 "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb"
+#CC=clang-18
+#HOSTCC=clang-18
+#LLVM=-18
+#LLVM_IAS=1
+#CROSS_COMPILE=aarch64-alpine-linux-musl-
 
+# Compiler: GCC 6 (doesn't boot when compiled with newer versions)
+if [ "${CC:0:5}" != "gcc6-" ]; then
+	CC="gcc6-$CC"
+	HOSTCC="gcc6-gcc"
+	CROSS_COMPILE="gcc6-$CROSS_COMPILE"
+fi
+
+#0001-Revert-SQUASH-exynos-camera-unify-all-camera-headers.patch
 # Source
 _repository="android_kernel_samsung_m33x"
-_commit="9c64f7aa866dca5a50dda6bd554601e80cf800e8"
+_commit="ba642fe8b8834435a826a1d2b41f84620397cbc9"
 _config="config-$_flavor.$arch"
 source="
 	$pkgname-$_commit.tar.gz::https://github.com/fluffball3/$_repository/archive/$_commit.tar.gz
@@ -57,9 +65,11 @@ prepare() {
 
 build() {
 	unset LDFLAGS
-#	export CC="clang"
-#	export HOSTCC="clang"
-	make O="$_outdir" ARCH="$_carch" CC="${CC:-gcc}" PLATFORM_VERSION=12 TARGET_SOC=s5e8825 \
+	#export CC=clang-18
+	#export HOSTCC=clang-18
+	#export CROSS_COMPILE=aarch64-alpine-linux-musl-
+	#CC="${CC:-gcc}"
+	make O="$_outdir" ARCH="$_carch" PLATFORM_VERSION=12 CC="${CC:-gcc}" TARGET_SOC=s5e8825 \
 		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-postmarketOS"
 	cp $_outdir/arch/$_carch/boot/Image.gz $_outdir/arch/$_carch/boot/Image
 }
@@ -71,11 +81,11 @@ package() {
 	make dtbs_install O="$_outdir" ARCH="$_carch" \
 		INSTALL_DTBS_PATH="$pkgdir/boot/dtbs"
 
-	make modules_install O="$_outdir" ARCH="$_carch" INSTALL_MOD_STRIP="--strip-debug" \
+	make modules_install O="$_outdir" ARCH="$_carch" INSTALL_MOD_STRIP=1 \
 		INSTALL_MOD_PATH="$pkgdir"
 }
 
 sha512sums="
-c3d9a02490eaac072625c8093b2bcc0e277cf071f29cb3a9a9a40098be9afad4176eb30e4f3289ef5a8d8f73e12f1dba127a33b45dcbbf9138b04033fd804c42  linux-samsung-m33x-9c64f7aa866dca5a50dda6bd554601e80cf800e8.tar.gz
-f2f619d8db1287af5a574d63aec09f1e9b5b683e8059f7c84f82a5e1232008d23fd273761fe58da8abe12e50e1417891b44a3b1cb2446a118a5f795350905363  config-samsung-m33x.aarch64
+7119a54a817d1386f0631b464192665615f72fb757888e514db0609d4e92d1ec561ef3fd963ef6fd17f13f8feb5317b1c14401c762caa586aace2373093b11c2  linux-samsung-m33x-91a2c8a6b9426a17845b4e092f2bbcd009669634.tar.gz
+033584afa151bd3e2d6441afe649bcbb4eab646d0d96fe207e35739ed9bbc006fc9137450889e4775a664c623cfa2ca721284a21b2f0539a2b1451e463c8c784  config-samsung-m33x.aarch64
 "

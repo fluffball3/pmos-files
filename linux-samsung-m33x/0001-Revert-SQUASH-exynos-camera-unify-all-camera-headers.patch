@@ -1,0 +1,1580 @@
+From 208af060a0ee27856e4e3779f1fd8105dc8cdb0d Mon Sep 17 00:00:00 2001
+From: fluffball3 <fluffball3@proton.me>
+Date: Sun, 27 Apr 2025 07:30:13 +0530
+Subject: [PATCH] Revert "[SQUASH] exynos: camera: unify all camera headers"
+
+This reverts commit d907a3c9b58024833acd8d4d7e235d1128164d98.
+---
+ .../actuator/is-actuator-dw9808.c             |  26 ++-
+ .../sensor/module_framework/cis/is-cis-3j1.c  |   6 +-
+ .../sensor/module_framework/cis/is-cis-3k1.c  |   6 +-
+ .../module_framework/cis/is-cis-gc02m1.c      |  10 +-
+ .../module_framework/cis/is-cis-gc02m2.c      |  46 +++--
+ .../module_framework/cis/is-cis-gc5035.c      |  10 +-
+ .../module_framework/cis/is-cis-imx258.c      |  14 +-
+ .../module_framework/cis/is-cis-imx374.c      |   6 +-
+ .../module_framework/cis/is-cis-imx682.c      |  17 +-
+ .../module_framework/cis/is-cis-imx754.c      |   6 +-
+ .../module_framework/is-control-sensor.c      |  37 ++---
+ .../module_framework/is-device-sensor-peri.c  |  56 ++-----
+ .../module_framework/is-interface-sensor.c    |  65 ++------
+ .../modules/is-device-module-base.c           |  18 +-
+ .../exynos/camera/vendor/mcd/is-sysfs.c       |  62 +++----
+ .../exynos/camera/vendor/mcd/is-vender.c      |   3 +-
+ .../is-vendor-config_aavw_common.h            |  79 +--------
+ .../camera/vendor/mcd_v2/is-device-ois-mcu.c  | 111 ++++++-------
+ .../camera/vendor/mcd_v2/is-device-otprom.c   |  20 +--
+ .../camera/vendor/mcd_v2/is-sec-define.c      |  72 ++++----
+ .../exynos/camera/vendor/mcd_v2/is-sysfs.c    | 130 +++++++--------
+ .../exynos/camera/vendor/mcd_v2/is-vender.c   |  30 ++--
+ drivers/misc/sec_detect.c                     | 157 ------------------
+ include/linux/sec_detect.h                    |  23 ---
+ 24 files changed, 321 insertions(+), 689 deletions(-)
+
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/actuator/is-actuator-dw9808.c b/drivers/media/platform/exynos/camera/sensor/module_framework/actuator/is-actuator-dw9808.c
+index 04165651cbfa..a3f8d1df34e9 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/actuator/is-actuator-dw9808.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/actuator/is-actuator-dw9808.c
+@@ -578,20 +578,18 @@ static int sensor_dw9808_actuator_s_ctrl(struct v4l2_subdev *subdev, struct v4l2
+ 		}
+ 		break;
+ #ifdef USE_CAMERA_ACT_DRIVER_SOFT_LANDING
+-	if (mcd_use_camera_act_driver_soft_landing) {
+-		case V4L2_CID_ACTUATOR_SOFT_LANDING:
+-			ret = sensor_dw9808_actuator_soft_landing(subdev);
+-			if(ret == HW_SOFTLANDING_FAIL) {
+-				err("[%s] NRC Softlanding Failed \n",__func__);
+-				goto p_err;
+-			}
+-			if (ret) {
+-				err("[%s] Actuator Softlanding Failed  \n", __func__);
+-				ret = -EINVAL;
+-				goto p_err;
+-			}
+-			break;
+-	}
++	case V4L2_CID_ACTUATOR_SOFT_LANDING:
++		ret = sensor_dw9808_actuator_soft_landing(subdev);
++		if(ret == HW_SOFTLANDING_FAIL) {
++			err("[%s] NRC Softlanding Failed \n",__func__);
++			goto p_err;
++		}
++		if (ret) {
++			err("[%s] Actuator Softlanding Failed  \n", __func__);
++			ret = -EINVAL;
++			goto p_err;
++		}
++		break;
+ #endif
+ 	default:
+ 		err("err!!! Unknown CID(%#x)", ctrl->id);
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3j1.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3j1.c
+index b7284c09f90a..021b6477e47b 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3j1.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3j1.c
+@@ -216,10 +216,8 @@ int sensor_3j1_cis_init(struct v4l2_subdev *subdev)
+ 	cis->cis_data->low_expo_start = 33000;
+ 	cis->need_mode_change = false;
+ #ifdef USE_CAMERA_ADAPTIVE_MIPI
+-	if (mcd_use_camera_adaptive_mipi) {
+-		cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
+-		cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+-	}
++	cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
++	cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+ #endif
+ 
+ 	sensor_3j1_cis_data_calculation(sensor_3j1_pllinfos[setfile_index], cis->cis_data);
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3k1.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3k1.c
+index 7ef898e61421..3fcae444175c 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3k1.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-3k1.c
+@@ -214,10 +214,8 @@ int sensor_3k1_cis_init(struct v4l2_subdev *subdev)
+ 	cis->need_mode_change = false;
+ 	cis->cis_data->cur_pattern_mode = SENSOR_TEST_PATTERN_MODE_OFF;
+ #ifdef USE_CAMERA_ADAPTIVE_MIPI
+-	if (mcd_use_camera_adaptive_mipi) {
+-		cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
+-		cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+-	}
++	cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
++	cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+ #endif
+ 	cis->long_term_mode.sen_strm_off_on_enable = false;
+ 
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m1.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m1.c
+index dfc08a87c60d..d38e0d721db0 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m1.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m1.c
+@@ -945,13 +945,11 @@ int sensor_gc02m1_cis_stream_on(struct v4l2_subdev *subdev)
+ 
+ 	cis_data = cis->cis_data;
+ 
+-//#if !defined(DISABLE_DUAL_SYNC)
+-	if (!mcd_disable_dual_sync) {
+-		if ((this_device != &core->sensor[0]) && test_bit(IS_SENSOR_OPEN, &(core->sensor[0].state))) {
+-			single_mode = false;
+-		}
++#if !defined(DISABLE_DUAL_SYNC)
++	if ((this_device != &core->sensor[0]) && test_bit(IS_SENSOR_OPEN, &(core->sensor[0].state))) {
++		single_mode = false;
+ 	}
+-//#endif
++#endif
+ 
+ 	dbg_sensor(2, "[MOD:D:%d] %s\n", cis->id, __func__);
+ 
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m2.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m2.c
+index 3f1739cccfaa..32941d2afce6 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m2.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc02m2.c
+@@ -694,20 +694,18 @@ int sensor_gc02m2_cis_mode_change(struct v4l2_subdev *subdev, u32 mode)
+ 	}
+ 
+ #ifdef APPLY_MIRROR_VERTICAL_FLIP
+-	if (mcd_apply_mirror_vertical_flip) {
+-		/* Page Select */
+-		ret = is_sensor_addr8_write8(client, 0xfe, 0x00);
+-		if (ret < 0) {
+-			err("sensor gc02m2 write page select regsiter fail !!");
+-			goto p_i2c_err;
+-		}
++	/* Page Select */
++	ret = is_sensor_addr8_write8(client, 0xfe, 0x00);
++	if (ret < 0) {
++		err("sensor gc02m2 write page select regsiter fail !!");
++		goto p_i2c_err;
++	}
+ 
+-		/* Apply Mirror and Vertical Flip */
+-		ret = is_sensor_addr8_write8(client, 0x17, 0x83);
+-		if (ret < 0) {
+-			err("sensor gc02m2 write flip register select fail !!");
+-			goto p_i2c_err;
+-		}
++	/* Apply Mirror and Vertical Flip */
++	ret = is_sensor_addr8_write8(client, 0x17, 0x83);
++	if (ret < 0) {
++		err("sensor gc02m2 write flip register select fail !!");
++		goto p_i2c_err;
+ 	}
+ #endif
+ 
+@@ -909,13 +907,11 @@ int sensor_gc02m2_cis_stream_on(struct v4l2_subdev *subdev)
+ 
+ 	cis_data = cis->cis_data;
+ 
+-//#if !defined(DISABLE_DUAL_SYNC)
+-	if (!mcd_disable_dual_sync) {
+-		if ((this_device != &core->sensor[0]) && test_bit(IS_SENSOR_OPEN, &(core->sensor[0].state))) {
+-			single_mode = false;
+-		}
++#if !defined(DISABLE_DUAL_SYNC)
++	if ((this_device != &core->sensor[0]) && test_bit(IS_SENSOR_OPEN, &(core->sensor[0].state))) {
++		single_mode = false;
+ 	}
+-//#endif
++#endif
+ 
+ 	dbg_sensor(2, "[MOD:D:%d] %s\n", cis->id, __func__);
+ 
+@@ -1925,13 +1921,11 @@ int cis_gc02m2_probe(struct i2c_client *client,
+ 	cis->cis_ops = &cis_ops;
+ 
+ 	/* belows are depend on sensor cis. MUST check sensor spec */
+-//#ifdef APPLY_MIRROR_VERTICAL_FLIP
+-	if (mcd_apply_mirror_vertical_flip)
+-		cis->bayer_order = OTF_INPUT_ORDER_BAYER_BG_GR;
+-//#else
+-	else
+-		cis->bayer_order = OTF_INPUT_ORDER_BAYER_RG_GB;
+-//#endif
++#ifdef APPLY_MIRROR_VERTICAL_FLIP
++	cis->bayer_order = OTF_INPUT_ORDER_BAYER_BG_GR;
++#else
++	cis->bayer_order = OTF_INPUT_ORDER_BAYER_RG_GB;
++#endif
+ 
+ 	/* Use total gain instead of using dgain */
+ 	cis->use_dgain = false;
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc5035.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc5035.c
+index 200aa4d09e7d..19e11fc487bd 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc5035.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-gc5035.c
+@@ -1055,13 +1055,11 @@ int sensor_gc5035_cis_stream_on(struct v4l2_subdev *subdev)
+ 
+ 	cis_data = cis->cis_data;
+ 
+-//#if !defined(DISABLE_DUAL_SYNC)
+-	if (!mcd_disable_dual_sync) {
+-		if ((this_device != &core->sensor[0]) && test_bit(IS_SENSOR_OPEN, &(core->sensor[0].state))) {
+-			single_mode = false;
+-		}
++#if !defined(DISABLE_DUAL_SYNC)
++	if ((this_device != &core->sensor[0]) && test_bit(IS_SENSOR_OPEN, &(core->sensor[0].state))) {
++		single_mode = false;
+ 	}
+-//#endif
++#endif
+ 	/* Sensor Dual sync on/off */
+ 	if (single_mode) {
+ 		/* Delay for single mode */
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx258.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx258.c
+index acc4d1e77806..34d91b7e9a3b 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx258.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx258.c
+@@ -37,7 +37,7 @@
+ #include "is-resourcemgr.h"
+ #include "is-dt.h"
+ #include "is-cis-imx258.h"
+-//#if defined(USE_IMX258_13MP_FULL_SIZE)
++#if defined(USE_IMX258_13MP_FULL_SIZE)
+ #include "is-cis-imx258-13M-full-setA.h"
+ #include "is-cis-imx258-13M-full-setB.h"
+ //#else
+@@ -1625,13 +1625,11 @@ static int cis_imx258_probe(struct i2c_client *client,
+ 	cis->ctrl_delay = N_PLUS_TWO_FRAME;
+ 	cis->cis_ops = &cis_ops;
+ 	/* belows are depend on sensor cis. MUST check sensor spec */
+-//#ifdef USE_IMX258_13MP_FULL_SIZE
+-	if (mcd_use_imx258_13mp_full_size)
+-		cis->bayer_order = OTF_INPUT_ORDER_BAYER_BG_GR;
+-//#else
+-	else
+-		cis->bayer_order = OTF_INPUT_ORDER_BAYER_RG_GB;
+-//#endif
++#ifdef USE_IMX258_13MP_FULL_SIZE
++	cis->bayer_order = OTF_INPUT_ORDER_BAYER_BG_GR;
++#else
++	cis->bayer_order = OTF_INPUT_ORDER_BAYER_RG_GB;
++#endif
+ 	/* Use total gain instead of using dgain */
+ 	cis->use_dgain = false;
+ 	cis->use_vendor_total_gain = true;
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx374.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx374.c
+index 431fc0b6c40d..b34d681dc99e 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx374.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx374.c
+@@ -209,10 +209,8 @@ int sensor_imx374_cis_init(struct v4l2_subdev *subdev)
+ 	cis->cis_data->low_expo_start = 33000;
+ 	cis->need_mode_change = false;
+ #ifdef USE_CAMERA_ADAPTIVE_MIPI
+-	if (mcd_use_camera_adaptive_mipi) {
+-		cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
+-		cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+-	}
++	cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
++	cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+ #endif
+ 
+ 	sensor_imx374_cis_data_calculation(sensor_imx374_pllinfos[setfile_index], cis->cis_data);
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx682.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx682.c
+index 9a59596e0ba6..80d1d0bec7c6 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx682.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx682.c
+@@ -1319,17 +1319,14 @@ int sensor_imx682_cis_stream_on(struct v4l2_subdev *subdev)
+ #endif
+ 
+ 	I2C_MUTEX_LOCK(cis->i2c_lock);
+-//#ifdef DISABLE_DUAL_SYNC
+-	if (mcd_disable_dual_sync) {
+-		info("[%s] start (single mode)\n", __func__);
+-//#else
+-	} else {
+-		info("[%s] start (dual master mode)\n", __func__);
++#ifdef DISABLE_DUAL_SYNC
++	info("[%s] start (single mode)\n", __func__);
++#else
++	info("[%s] start (dual master mode)\n", __func__);
+ 
+-		is_sensor_write8(client, 0x3020, 0x1);
+-		is_sensor_write8(client, 0x3031, 0x1);
+-	}
+-//#endif
++	is_sensor_write8(client, 0x3020, 0x1);
++	is_sensor_write8(client, 0x3031, 0x1);
++#endif
+ 
+ 	/* Sensor stream on */
+ 	is_sensor_write8(client, SENSOR_IMX682_SETUP_MODE_SELECT_ADDR, 0x01);
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx754.c b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx754.c
+index d02d524951e9..aa7fe74dc7a9 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx754.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/cis/is-cis-imx754.c
+@@ -251,10 +251,8 @@ int sensor_imx754_cis_init(struct v4l2_subdev *subdev)
+ 	cis->need_mode_change = false;
+ 	cis->long_term_mode.sen_strm_off_on_enable = false;
+ #ifdef USE_CAMERA_ADAPTIVE_MIPI
+-	if (mcd_use_camera_adaptive_mipi) {
+-		cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
+-		cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+-	}
++	cis->mipi_clock_index_cur = CAM_MIPI_NOT_INITIALIZED;
++	cis->mipi_clock_index_new = CAM_MIPI_NOT_INITIALIZED;
+ #endif
+ 	for (idx = 0; idx < SENSOR_IMX754_MODE_MAX; ++idx)
+ 		start_pos_infos[idx].x_start = start_pos_infos[idx].y_start = 0;
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/is-control-sensor.c b/drivers/media/platform/exynos/camera/sensor/module_framework/is-control-sensor.c
+index 263c3c8e195a..f4118fe67367 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/is-control-sensor.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/is-control-sensor.c
+@@ -981,28 +981,23 @@ void is_sensor_ctl_frame_evt(struct is_device_sensor *device)
+ 			}
+ 
+ #ifdef USE_OIS_HALL_DATA_FOR_VDIS
+-			if (mcd_use_ois_hall_data_for_vdis) {
+-				cur_frame_duration = is_sensor_convert_ns_to_us(sensor_peri->cis.cur_sensor_uctrl.frameDuration);
+-				/* in case of under 60fps, enable ois hall data */
+-				if (cur_frame_duration >= 16666) {
+-					if(cur_frame_duration == 16666) /* in case of 60fps - fix frame index error*/
+-						dm_index[2] = (applied_frame_number + 1) % EXPECT_DM_NUM;
+-
+-					memset(&hall_data, 0, sizeof(hall_data));
+-					ret = CALL_OISOPS(sensor_peri->mcu->ois, ois_get_hall_data, sensor_peri->subdev_mcu, &hall_data);
+-					if (ret < 0) {
+-						err("[SEN:%d] v4l2_subdev_call(ois_get_hall_data) is fail(%d)", ret);
+-						goto p_err;
+-					}
+-
+-					hashkey = module_ctl->sensor_frame_number % IS_TIMESTAMP_HASH_KEY;
+-					timestamp = device->timestampboot[hashkey];
+-					hall_data.readTimeStamp = timestamp;
+-#ifdef OIS_ANGLE_SUPPORT
+-				hall_data.index = dm_index[2];
+-#endif
+-					is_sensor_ctl_update_hall_data(device, module_ctl, dm_index, &hall_data);
++			cur_frame_duration = is_sensor_convert_ns_to_us(sensor_peri->cis.cur_sensor_uctrl.frameDuration);
++			/* in case of under 60fps, enable ois hall data */
++			if (cur_frame_duration >= 16666) {
++				if(cur_frame_duration == 16666) /* in case of 60fps - fix frame index error*/
++					dm_index[2] = (applied_frame_number + 1) % EXPECT_DM_NUM;
++
++				memset(&hall_data, 0, sizeof(hall_data));
++				ret = CALL_OISOPS(sensor_peri->mcu->ois, ois_get_hall_data, sensor_peri->subdev_mcu, &hall_data);
++				if (ret < 0) {
++					err("[SEN:%d] v4l2_subdev_call(ois_get_hall_data) is fail(%d)", ret);
++					goto p_err;
+ 				}
++
++				hashkey = module_ctl->sensor_frame_number % IS_TIMESTAMP_HASH_KEY;
++				timestamp = device->timestampboot[hashkey];
++				hall_data.readTimeStamp = timestamp;
++				is_sensor_ctl_update_hall_data(device, module_ctl, dm_index, &hall_data);
+ 			}
+ #endif
+ 		}
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/is-device-sensor-peri.c b/drivers/media/platform/exynos/camera/sensor/module_framework/is-device-sensor-peri.c
+index aa8924b04ed4..ef421e620bc5 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/is-device-sensor-peri.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/is-device-sensor-peri.c
+@@ -524,14 +524,9 @@ void is_sensor_flash_fire_work(struct work_struct *data)
+ 				if (ret) {
+ 					err("failed to turn off flash at flash expired handler\n");
+ #ifdef USE_LEDS_FLASH_CHARGING_VOLTAGE_CONTROL
+-					if (mcd_use_leds_flash_charging_voltage_control) {
+-						if (sec_legacy_usbpd)
+-							legacy_pdo_ctrl_by_flash(0);
+-						else
+-							pdo_ctrl_by_flash(0);
+-						muic_afc_request_voltage(FLED, 9);
+-						info("[%s](%d) MAIN Flash Info: Power Down set Clear(5V -> 9V).\n" ,__func__, __LINE__);
+-					}
++					pdo_ctrl_by_flash(0);
++					muic_afc_request_voltage(FLED, 9);
++					info("[%s](%d) MAIN Flash Info: Power Down set Clear(5V -> 9V).\n" ,__func__, __LINE__);
+ #endif
+ 				}
+ 			} else {
+@@ -558,14 +553,9 @@ void is_sensor_flash_fire_work(struct work_struct *data)
+ 			}
+ 
+ #ifdef USE_LEDS_FLASH_CHARGING_VOLTAGE_CONTROL
+-			if (mcd_use_leds_flash_charging_voltage_control) {
+-				if (sec_legacy_usbpd)
+-					legacy_pdo_ctrl_by_flash(0);
+-				else
+-					pdo_ctrl_by_flash(0);
+-				muic_afc_request_voltage(FLED, 9);
+-				info("[%s](%d) MAIN Flash Info: Power Down set Clear(5V -> 9V).\n" ,__func__, __LINE__);
+-			}
++			pdo_ctrl_by_flash(0);
++			muic_afc_request_voltage(FLED, 9);
++			info("[%s](%d) MAIN Flash Info: Power Down set Clear(5V -> 9V).\n" ,__func__, __LINE__);
+ #endif
+ 
+ 			flash->flash_ae.main_fls_ae_reset = false;
+@@ -1249,8 +1239,7 @@ int is_sensor_peri_pre_flash_fire(struct v4l2_subdev *subdev, void *arg)
+ 		flash->flash_data.intensity = flash_uctl->firingPower;
+ 		flash->flash_data.firing_time_us = flash_uctl->firingTime;
+ #ifdef USE_LEDS_FLASH_CHARGING_VOLTAGE_CONTROL
+-		if (mcd_use_leds_flash_charging_voltage_control)
+-			schedule_work(&sensor_peri->flash->flash_data.muic_ctrl_and_flash_fire_work);
++		schedule_work(&sensor_peri->flash->flash_data.muic_ctrl_and_flash_fire_work);
+ #else
+ 
+ 		info("[%s](%d) pre-flash mode(%d), pow(%d), time(%d)\n", __func__,
+@@ -1625,8 +1614,7 @@ void is_sensor_peri_init_work(struct is_device_sensor_peri *sensor_peri)
+ 		INIT_WORK(&sensor_peri->flash->flash_data.flash_fire_work, is_sensor_flash_fire_work);
+ 		INIT_WORK(&sensor_peri->flash->flash_data.flash_expire_work, is_sensor_flash_expire_work);
+ #ifdef USE_LEDS_FLASH_CHARGING_VOLTAGE_CONTROL
+-		if (mcd_use_leds_flash_charging_voltage_control)
+-			INIT_WORK(&sensor_peri->flash->flash_data.muic_ctrl_and_flash_fire_work, is_sensor_muic_ctrl_and_flash_fire);
++		INIT_WORK(&sensor_peri->flash->flash_data.muic_ctrl_and_flash_fire_work, is_sensor_muic_ctrl_and_flash_fire);
+ #endif
+ 	}
+ 
+@@ -2240,14 +2228,9 @@ int is_sensor_peri_s_stream(struct is_device_sensor *device,
+ 					sensor_peri->flash->flash_ae.pre_fls_ae_reset = false;
+ 					sensor_peri->flash->flash_ae.frm_num_pre_fls = 0;
+ #if defined(USE_LEDS_FLASH_CHARGING_VOLTAGE_CONTROL)
+-					if (mcd_use_leds_flash_charging_voltage_control) {
+-						if (sec_legacy_usbpd)
+-							legacy_pdo_ctrl_by_flash(0);
+-						else
+-							pdo_ctrl_by_flash(0);
+-						muic_afc_request_voltage(FLED, 9);
+-						info("[%s]%d Down Voltage set Clear \n" ,__func__, __LINE__);
+-					}
++					pdo_ctrl_by_flash(0);
++					muic_afc_request_voltage(FLED, 9);
++					info("[%s]%d Down Voltage set Clear \n" ,__func__, __LINE__);
+ #endif
+ 				}
+ 				mutex_unlock(&sensor_peri->cis.control_lock);
+@@ -2257,8 +2240,7 @@ int is_sensor_peri_s_stream(struct is_device_sensor *device,
+ 
+ 		memset(&sensor_peri->cis.cur_sensor_uctrl, 0, sizeof(camera2_sensor_uctl_t));
+ #ifdef USE_OIS_HALL_DATA_FOR_VDIS
+-		if (mcd_use_ois_hall_data_for_vdis)
+-			memset(&sensor_peri->cis.expecting_aa_dm[0], 0, sizeof(camera2_aa_dm_t) * EXPECT_DM_NUM);
++		memset(&sensor_peri->cis.expecting_aa_dm[0], 0, sizeof(camera2_aa_dm_t) * EXPECT_DM_NUM);
+ #endif
+ 		memset(&sensor_peri->cis.expecting_sensor_dm[0], 0, sizeof(camera2_sensor_dm_t) * EXPECT_DM_NUM);
+ 		memset(&sensor_peri->cis.expecting_sensor_udm[0], 0, sizeof(camera2_sensor_udm_t) * EXPECT_DM_NUM);
+@@ -3072,15 +3054,13 @@ int is_sensor_peri_actuator_softlanding(struct is_device_sensor_peri *device)
+ 	}
+ 
+ #ifdef USE_CAMERA_ACT_DRIVER_SOFT_LANDING
+-	if (mcd_use_camera_act_driver_soft_landing) {
+-		v4l2_ctrl.id = V4L2_CID_ACTUATOR_SOFT_LANDING;
+-		ret = v4l2_subdev_call(device->subdev_actuator, core, ioctl, SENSOR_IOCTL_ACT_S_CTRL, &v4l2_ctrl);
+-		if(ret != HW_SOFTLANDING_FAIL) {
+-			if (ret) {
+-				err("v4l2_subdev_call(s_ctrl, id:%d) is fail(%d)", v4l2_ctrl.id, ret);
+-			}
+-			return ret;
++	v4l2_ctrl.id = V4L2_CID_ACTUATOR_SOFT_LANDING;
++	ret = v4l2_subdev_call(device->subdev_actuator, core, ioctl, SENSOR_IOCTL_ACT_S_CTRL, &v4l2_ctrl);
++	if(ret != HW_SOFTLANDING_FAIL) {
++		if (ret) {
++			err("v4l2_subdev_call(s_ctrl, id:%d) is fail(%d)", v4l2_ctrl.id, ret);
+ 		}
++		return ret;
+ 	}
+ #endif
+ 
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/is-interface-sensor.c b/drivers/media/platform/exynos/camera/sensor/module_framework/is-interface-sensor.c
+index 9c0414f8a4f1..6dc01ff02a47 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/is-interface-sensor.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/is-interface-sensor.c
+@@ -2021,53 +2021,21 @@ int update_sensor_dynamic_meta(struct is_sensor_interface *itf,
+ 	udm->sensor.midDigitalGain = sensor_peri->cis.expecting_sensor_udm[index].midDigitalGain;
+ 
+ #ifdef USE_OIS_HALL_DATA_FOR_VDIS
+-	if (mcd_use_ois_hall_data_for_vdis) {
+-		/* update ois hall data */
+-#ifdef OIS_ANGLE_SUPPORT
+-		if (sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.index == index)	{
+-#endif
+-			dm->aa.vendor_oisHallData.readTimeStamp = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.readTimeStamp;
+-#ifdef OIS_ANGLE_SUPPORT
+-					dm->aa.vendor_oisHallData.defaultAngle = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.defaultAngle;
+-#else
+-			dm->aa.vendor_oisHallData.counter = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.counter;
+-#endif
+-			dm->aa.vendor_oisHallData.X_AngVel[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[0];
+-			dm->aa.vendor_oisHallData.Y_AngVel[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[0];
+-			dm->aa.vendor_oisHallData.Z_AngVel[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[0];
+-			dm->aa.vendor_oisHallData.X_AngVel[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[1];
+-			dm->aa.vendor_oisHallData.Y_AngVel[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[1];
+-			dm->aa.vendor_oisHallData.Z_AngVel[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[1];
+-			dm->aa.vendor_oisHallData.X_AngVel[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[2];
+-			dm->aa.vendor_oisHallData.Y_AngVel[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[2];
+-			dm->aa.vendor_oisHallData.Z_AngVel[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[2];
+-			dm->aa.vendor_oisHallData.X_AngVel[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[3];
+-			dm->aa.vendor_oisHallData.Y_AngVel[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[3];
+-			dm->aa.vendor_oisHallData.Z_AngVel[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[3];
+-#ifdef OIS_ANGLE_SUPPORT
+-			dm->aa.vendor_oisHallData.X_Angle[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[0];
+-			dm->aa.vendor_oisHallData.Y_Angle[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_Angle[0];
+-			dm->aa.vendor_oisHallData.X_Angle[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[1];
+-			dm->aa.vendor_oisHallData.Y_Angle[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_Angle[1];
+-			dm->aa.vendor_oisHallData.X_Angle[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[2];
+-			dm->aa.vendor_oisHallData.Y_Angle[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_Angle[2];
+-			dm->aa.vendor_oisHallData.X_Angle[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[3];
+-			dm->aa.vendor_oisHallData.Y_Angle[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_Angle[3];
+-			sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.index = EXPECT_DM_NUM + 1;
+-
+-			dbg_ois(" %s :(X_AngVel[0]= %d,X_AngVel[1]=%d,X_AngVel[2]=%d,X_AngVel[3]=%d)\n", __func__,
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[0],
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[1],
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[2],
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[3]);
+-			dbg_ois(" %s :(X_Ang[0]= %d,X_Ang[1]=%d,X_Ang[2]=%d,X_Ang[3]=%d)\n", __func__,
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[0],
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[1],
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[2],
+-				sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_Angle[3]);
+-		}
+-#endif
+-	}
++	/* update ois hall data */
++	dm->aa.vendor_oisHallData.readTimeStamp = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.readTimeStamp;
++	dm->aa.vendor_oisHallData.counter = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.counter;
++	dm->aa.vendor_oisHallData.X_AngVel[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[0];
++	dm->aa.vendor_oisHallData.Y_AngVel[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[0];
++	dm->aa.vendor_oisHallData.Z_AngVel[0] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[0];
++	dm->aa.vendor_oisHallData.X_AngVel[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[1];
++	dm->aa.vendor_oisHallData.Y_AngVel[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[1];
++	dm->aa.vendor_oisHallData.Z_AngVel[1] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[1];
++	dm->aa.vendor_oisHallData.X_AngVel[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[2];
++	dm->aa.vendor_oisHallData.Y_AngVel[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[2];
++	dm->aa.vendor_oisHallData.Z_AngVel[2] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[2];
++	dm->aa.vendor_oisHallData.X_AngVel[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.X_AngVel[3];
++	dm->aa.vendor_oisHallData.Y_AngVel[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Y_AngVel[3];
++	dm->aa.vendor_oisHallData.Z_AngVel[3] = sensor_peri->cis.expecting_aa_dm[index].vendor_oisHallData.Z_AngVel[3];
+ #endif
+ 
+ 	dbg_sensor(1, "[%s] (F:%d): expo(%lld), duration(%lld), sensitivity(%d), rollingShutterSkew(%lld)\n",
+@@ -3980,9 +3948,6 @@ int get_delayed_preflash_time(struct is_sensor_interface *itf, u32 *delayedTime)
+ 	struct v4l2_subdev *subdev_flash;
+ 	struct v4l2_control ctrl;
+ 
+-	if (!mcd_use_leds_flash_charging_voltage_control)
+-		return 0;
+-
+ 	WARN_ON(!itf);
+ 	WARN_ON(itf->magic != SENSOR_INTERFACE_MAGIC);
+ 
+diff --git a/drivers/media/platform/exynos/camera/sensor/module_framework/modules/is-device-module-base.c b/drivers/media/platform/exynos/camera/sensor/module_framework/modules/is-device-module-base.c
+index 0726f0452066..0cc52212ddeb 100755
+--- a/drivers/media/platform/exynos/camera/sensor/module_framework/modules/is-device-module-base.c
++++ b/drivers/media/platform/exynos/camera/sensor/module_framework/modules/is-device-module-base.c
+@@ -269,18 +269,16 @@ int sensor_module_deinit(struct v4l2_subdev *subdev)
+ 	}
+ 
+ #ifdef USE_CAMERA_ACT_DRIVER_SOFT_LANDING
+-	if (mcd_use_camera_act_driver_soft_landing) {
+-		if (sensor_peri->actuator) {
+-			flush_work(&sensor_peri->actuator->actuator_init_work);
++	if (sensor_peri->actuator) {
++		flush_work(&sensor_peri->actuator->actuator_init_work);
+ 
+-			ret = is_sensor_peri_actuator_softlanding(sensor_peri);
+-			if (ret)
+-				err("failed to soft landing control\n");
++		ret = is_sensor_peri_actuator_softlanding(sensor_peri);
++		if (ret)
++			err("failed to soft landing control\n");
+ 
+-			mutex_lock(&sensor_peri->actuator->control_init_lock);
+-			sensor_peri->actuator->actuator_init_state = ACTUATOR_NOT_INITIALIZED;
+-			mutex_unlock(&sensor_peri->actuator->control_init_lock);
+-		}
++		mutex_lock(&sensor_peri->actuator->control_init_lock);
++		sensor_peri->actuator->actuator_init_state = ACTUATOR_NOT_INITIALIZED;
++		mutex_unlock(&sensor_peri->actuator->control_init_lock);
+ 	}
+ #endif
+ 
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd/is-sysfs.c b/drivers/media/platform/exynos/camera/vendor/mcd/is-sysfs.c
+index 838828213cc3..8a48aa381650 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd/is-sysfs.c
++++ b/drivers/media/platform/exynos/camera/vendor/mcd/is-sysfs.c
+@@ -5226,20 +5226,18 @@ int is_create_sysfs(struct is_core *core)
+ 			pr_err("failed to create front device file, %s\n",
+ 					dev_attr_front_mtf_exif.attr.name);
+ 		}
+-//#ifndef CAMERA_FRONT_FIXED_FOCUS
+-		if (!mcd_camera_front_fixed_focus) {
++#ifndef CAMERA_FRONT_FIXED_FOCUS
+ #ifdef CAMERA_FRONT_PAFCAL
+-			if (device_create_file(camera_front_dev, &dev_attr_front_paf_cal_check) < 0) {
+-				pr_err("failed to create front device file, %s\n",
+-						dev_attr_front_paf_cal_check.attr.name);
+-			}
++		if (device_create_file(camera_front_dev, &dev_attr_front_paf_cal_check) < 0) {
++			pr_err("failed to create front device file, %s\n",
++					dev_attr_front_paf_cal_check.attr.name);
++		}
+ #endif
+-			if (device_create_file(camera_front_dev, &dev_attr_front_afcal) < 0) {
+-				pr_err("failed to create front device file, %s\n",
+-						dev_attr_front_afcal.attr.name);
+-			}
++		if (device_create_file(camera_front_dev, &dev_attr_front_afcal) < 0) {
++			pr_err("failed to create front device file, %s\n",
++					dev_attr_front_afcal.attr.name);
+ 		}
+-//#endif
++#endif
+ 		if (device_create_file(camera_front_dev, &dev_attr_front_moduleid) < 0) {
+ 			pr_err("failed to create front device file, %s\n",
+ 					dev_attr_front_moduleid.attr.name);
+@@ -5451,19 +5449,17 @@ int is_create_sysfs(struct is_core *core)
+ 				dev_attr_rear_phy_tune.attr.name);
+ 		}
+ #ifdef CAMERA_REAR_DUAL_CAL
+-		if (mcd_camera_rear_dual_cal) {
+-			if (device_create_file(camera_rear_dev, &dev_attr_rear_dualcal) < 0) {
+-				pr_err("failed to create rear device file, %s\n",
+-						dev_attr_rear_dualcal.attr.name);
+-			}
+-			if (device_create_file(camera_rear_dev, &dev_attr_rear2_dualcal) < 0) {
+-				pr_err("failed to create rear device file, %s\n",
+-						dev_attr_rear_dualcal.attr.name);
+-			}
+-			if (device_create_file(camera_rear_dev, &dev_attr_rear3_dualcal) < 0) {
+-				pr_err("failed to create rear device file, %s\n",
+-						dev_attr_rear_dualcal.attr.name);
+-			}
++		if (device_create_file(camera_rear_dev, &dev_attr_rear_dualcal) < 0) {
++			pr_err("failed to create rear device file, %s\n",
++					dev_attr_rear_dualcal.attr.name);
++		}
++		if (device_create_file(camera_rear_dev, &dev_attr_rear2_dualcal) < 0) {
++			pr_err("failed to create rear device file, %s\n",
++					dev_attr_rear_dualcal.attr.name);
++		}
++		if (device_create_file(camera_rear_dev, &dev_attr_rear3_dualcal) < 0) {
++			pr_err("failed to create rear device file, %s\n",
++					dev_attr_rear_dualcal.attr.name);
+ 		}
+ #endif
+ 
+@@ -5993,14 +5989,12 @@ int is_destroy_sysfs(struct is_core *core)
+ 		device_remove_file(camera_front_dev, &dev_attr_front_caminfo);
+ 		device_remove_file(camera_front_dev, &dev_attr_front_camfw);
+ #if defined(CAMERA_EEPROM_SUPPORT_FRONT)
+-//#ifndef CAMERA_FRONT_FIXED_FOCUS
+-		if (!mcd_camera_front_fixed_focus) {
+-			device_remove_file(camera_front_dev, &dev_attr_front_afcal);
++#ifndef CAMERA_FRONT_FIXED_FOCUS
++		device_remove_file(camera_front_dev, &dev_attr_front_afcal);
+ #ifdef CAMERA_FRONT_PAFCAL
+-			device_remove_file(camera_front_dev, &dev_attr_front_paf_cal_check);
++		device_remove_file(camera_front_dev, &dev_attr_front_paf_cal_check);
++#endif
+ #endif
+-		}
+-//#endif
+ 		device_remove_file(camera_front_dev, &dev_attr_front_camfw_full);
+ 		device_remove_file(camera_front_dev, &dev_attr_front_checkfw_factory);
+ 		device_remove_file(camera_front_dev, &dev_attr_front_moduleid);
+@@ -6084,11 +6078,9 @@ int is_destroy_sysfs(struct is_core *core)
+ 		device_remove_file(camera_rear_dev, &dev_attr_rear_moduleid);
+ 		device_remove_file(camera_rear_dev, &dev_attr_rear_phy_tune);
+ #ifdef CAMERA_REAR_DUAL_CAL
+-		if (mcd_camera_rear_dual_cal) {
+-			device_remove_file(camera_rear_dev, &dev_attr_rear_dualcal);
+-			device_remove_file(camera_rear_dev, &dev_attr_rear2_dualcal);
+-			device_remove_file(camera_rear_dev, &dev_attr_rear3_dualcal);
+-		}
++		device_remove_file(camera_rear_dev, &dev_attr_rear_dualcal);
++		device_remove_file(camera_rear_dev, &dev_attr_rear2_dualcal);
++		device_remove_file(camera_rear_dev, &dev_attr_rear3_dualcal);
+ #endif
+ #ifdef CAMERA_REAR2
+ 		device_remove_file(camera_rear_dev, &dev_attr_rear2_caminfo);
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd/is-vender.c b/drivers/media/platform/exynos/camera/vendor/mcd/is-vender.c
+index 67dbb9d66c27..4848c906de11 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd/is-vender.c
++++ b/drivers/media/platform/exynos/camera/vendor/mcd/is-vender.c
+@@ -1576,8 +1576,7 @@ int is_vender_hw_init(struct is_vender *vender)
+ 	}
+ 
+ #ifdef USE_CAMERA_ADAPTIVE_MIPI
+-	if (mcd_use_camera_adaptive_mipi)
+-		is_vendor_register_ril_notifier();
++	is_vendor_register_ril_notifier();
+ #endif
+ 	is_hw_init_running = false;
+ 	info("hw init done\n");
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd_v2/aavw_common/is-vendor-config_aavw_common.h b/drivers/media/platform/exynos/camera/vendor/mcd_v2/aavw_common/is-vendor-config_aavw_common.h
+index 48ef6c36aaed..9045eb842f14 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd_v2/aavw_common/is-vendor-config_aavw_common.h
++++ b/drivers/media/platform/exynos/camera/vendor/mcd_v2/aavw_common/is-vendor-config_aavw_common.h
+@@ -1,85 +1,24 @@
+ #ifndef IS_VENDOR_CONFIG_AAVW_COMMON_H
+ #define IS_VENDOR_CONFIG_AAVW_COMMON_H
+ 
+-#include <linux/sec_detect.h>
++/***** HW DEFENDANT DEFINE *****/
+ 
+-/* Common lines */
+-
+-#define CAMERA_EEPROM_SUPPORT_FRONT
++#define VENDER_PATH
+ 
+ #define USE_CAMERA_HEAP
+ #ifdef USE_CAMERA_HEAP
+-#define CAMERA_HEAP_NAME	"camera"
+-#define CAMERA_HEAP_NAME_LEN	6
+-#define CAMERA_HEAP_UNCACHED_NAME	"camera-uncached"
+-#define CAMERA_HEAP_UNCACHED_NAME_LEN	15
+-#endif
+-
+-#ifdef USE_KERNEL_VFS_READ_WRITE
+-#define DUAL_CAL_DATA_PATH "/vendor/firmware/SetMultiCalInfo.bin"
+-#else
+-#define DUAL_CAL_DATA_PATH "/vendor/firmware/"
+-#define DUAL_CAL_DATA_BIN_NAME "SetMultiCalInfo.bin"
++#define CAMERA_HEAP_NAME    "camera"
++#define CAMERA_HEAP_NAME_LEN    6
++#define CAMERA_HEAP_UNCACHED_NAME   "camera-uncached"
++#define CAMERA_HEAP_UNCACHED_NAME_LEN   15
+ #endif
+-#define READ_DUAL_CAL_FIRMWARE_DATA // Not for gta4xls
+ 
+-#define DUAL_CAL_DATA_SIZE_DEFAULT (0x080C)
++#define CONFIG_SEC_CAL_ENABLE
+ 
++#define CAMERA_EEPROM_SUPPORT_FRONT
+ #define CAMERA_STANDARD_CAL_ISP_VERSION 'E'
+-#define CONFIG_SECURE_CAMERA_USE 1
+-#define CONFIG_SEC_CAL_ENABLE
+ #define USES_STANDARD_CAL_RELOAD
+ #define USE_PERSISTENT_DEVICE_PROPERTIES_FOR_CAL /* For cal reload */
+-#define VENDER_PATH
+-
+-#define IS_REAR_MAX_CAL_SIZE (0x4970)
+-#define IS_FRONT_MAX_CAL_SIZE (0x3310)
+-#define IS_REAR2_MAX_CAL_SIZE (0x1AA0)
+-#define IS_REAR3_MAX_CAL_SIZE (0x1CA8)
+-#define IS_REAR4_MAX_CAL_SIZE (0x1A50)
+-
+-#define WIDE_OIS_ROM_ID ROM_ID_REAR // Not for gta4xls, m33x
+-
+-/* Unused */
+-#define USE_AP_PDAF
+-#define ENABLE_REMOSAIC_CAPTURE
+-
+-/* a33x */
+-#define CAMERA_FRONT_FIXED_FOCUS // Also used by a53x
+-#define CAMERA_REAR2
+-#define CAMERA_REAR2_MODULEID
+-#define CAMERA_REAR3
+-#define CAMERA_REAR3_MODULEID
+-#define CAMERA_REAR4
+-#define CAMERA_REAR4_MODULEID
+-#define CAMERA_REAR_DUAL_CAL // Not gta4xls
+-#define CAMERA_UWIDE_DUALIZED // Also used by a53x
+-#define CONFIG_CHECK_HW_VERSION_FOR_MCU_FW_UPLOAD
+-#define DISABLE_DUAL_SYNC // Also used by m33x, a53x
+-#define USE_IMX258_13MP_FULL_SIZE // Also used by a25x
+-#define USE_LEDS_FLASH_CHARGING_VOLTAGE_CONTROL // Also used by a25x
+-#define USE_OIS_HALL_DATA_FOR_VDIS // Also used by a25x, a53x, m34x
+-
+-/* a53x */
+-#define CAMERA_CAL_VERSION_GC5035B 'Q'
+-#define USE_GW1P_SETFILE
+-#define USE_HI1336C_SETFILE
+-
+-/* a25x */
+-#define APPLY_MIRROR_VERTICAL_FLIP // Also used by m34x
+-#define FRONT_OTPROM_EEPROM
+-#define MODIFY_CAL_MAP_FOR_SWREMOSAIC_LIB // Also used by m33x, m34x
+-#define RELAX_OIS_GYRO_OFFSET_SPEC // Also used by m34x
+-#define SIMPLIFY_OIS_INIT // Also used by m34x
+-#define USE_CAMERA_ADAPTIVE_MIPI // Also used by m33x, m34x
+-#define USE_OIS_GYRO_TDK_ICM_42632M // Also used by m34x
+-
+-/* m33x */
+-#define USE_CAMERA_ACT_DRIVER_SOFT_LANDING // Also used by gta4xls
+-
+-/* a26x */
+-#define USE_OIS_RESET_AUTOTEST
+-#define CAL_FOR_HW_GGC_A26x
+-// #define OIS_ANGLE_SUPPORT
+ 
++#define CONFIG_SECURE_CAMERA_USE 1
+ #endif /* IS_VENDOR_CONFIG_AAV_V53X_H */
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-ois-mcu.c b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-ois-mcu.c
+index 6a5b3b8833e1..5bbb3637b442 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-ois-mcu.c
++++ b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-ois-mcu.c
+@@ -1397,50 +1397,47 @@ void is_mcu_fw_update_aois(struct is_core *core)
+ 
+ 	ret = is_mcu_fw_version(subdev);
+ 	if (ret) {
+-//#ifdef CONFIG_CHECK_HW_VERSION_FOR_MCU_FW_UPLOAD
+-		if (mcd_config_check_hw_version_for_mcu_fw_upload) {
+-			int isUpload = 0;
++#ifdef CONFIG_CHECK_HW_VERSION_FOR_MCU_FW_UPLOAD
++		int isUpload = 0;
+ 
+-			if (!is_mcu_version_compare(mcu->hw_bin, mcu->hw_mcu))
+-				isUpload = 1;
++		if (!is_mcu_version_compare(mcu->hw_bin, mcu->hw_mcu))
++			isUpload = 1;
+ 
+-			info("HW binary ver = %c%c%c%c, module ver = %c%c%c%c",
+-				mcu->hw_bin[0], mcu->hw_bin[1], mcu->hw_bin[2], mcu->hw_bin[3],
+-				mcu->hw_mcu[0], mcu->hw_mcu[1], mcu->hw_mcu[2], mcu->hw_mcu[3]);
++		info("HW binary ver = %c%c%c%c, module ver = %c%c%c%c",
++			mcu->hw_bin[0], mcu->hw_bin[1], mcu->hw_bin[2], mcu->hw_bin[3],
++			mcu->hw_mcu[0], mcu->hw_mcu[1], mcu->hw_mcu[2], mcu->hw_mcu[3]);
+ 
+-			vdrinfo_bin = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_bin);
+-			vdrinfo_mcu = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_mcu);
++		vdrinfo_bin = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_bin);
++		vdrinfo_mcu = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_mcu);
+ 
+-			if (vdrinfo_bin > vdrinfo_mcu)
+-				isUpload = 1;
++		if (vdrinfo_bin > vdrinfo_mcu)
++			isUpload = 1;
+ 
+-			info("VDRINFO binary ver = %c%c%c%c, module ver = %c%c%c%c",
+-				mcu->vdrinfo_bin[0], mcu->vdrinfo_bin[1], mcu->vdrinfo_bin[2], mcu->vdrinfo_bin[3],
+-				mcu->vdrinfo_mcu[0], mcu->vdrinfo_mcu[1], mcu->vdrinfo_mcu[2], mcu->vdrinfo_mcu[3]);
++		info("VDRINFO binary ver = %c%c%c%c, module ver = %c%c%c%c",
++			mcu->vdrinfo_bin[0], mcu->vdrinfo_bin[1], mcu->vdrinfo_bin[2], mcu->vdrinfo_bin[3],
++			mcu->vdrinfo_mcu[0], mcu->vdrinfo_mcu[1], mcu->vdrinfo_mcu[2], mcu->vdrinfo_mcu[3]);
+ 
+-			if (isUpload)
+-				info("Update MCU firmware!!");
+-			else {
+-				info("Do not update MCU firmware");
+-			}
+-//#else
+-		} else {
+-			if (!is_mcu_version_compare(mcu->hw_bin, mcu->hw_mcu)) {
+-				info("Do not update MCU firmware. HW binary ver = %c%c%c%c, module ver = %c%c%c%c",
+-					mcu->hw_bin[0], mcu->hw_bin[1], mcu->hw_bin[2], mcu->hw_bin[3],
+-					mcu->hw_mcu[0], mcu->hw_mcu[1], mcu->hw_mcu[2], mcu->hw_mcu[3]);
+-			}
++		if (isUpload)
++			info("Update MCU firmware!!");
++		else {
++			info("Do not update MCU firmware");
++		}
++#else
++		if (!is_mcu_version_compare(mcu->hw_bin, mcu->hw_mcu)) {
++			info("Do not update MCU firmware. HW binary ver = %c%c%c%c, module ver = %c%c%c%c",
++				mcu->hw_bin[0], mcu->hw_bin[1], mcu->hw_bin[2], mcu->hw_bin[3],
++				mcu->hw_mcu[0], mcu->hw_mcu[1], mcu->hw_mcu[2], mcu->hw_mcu[3]);
++		}
+ 
+-			vdrinfo_bin = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_bin);
+-			vdrinfo_mcu = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_mcu);
++		vdrinfo_bin = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_bin);
++		vdrinfo_mcu = is_mcu_fw_revision_vdrinfo(mcu->vdrinfo_mcu);
+ 
+-			if (vdrinfo_bin <= vdrinfo_mcu) {
+-				info("Do not update MCU firmware. VDRINFO binary ver = %c%c%c%c, module ver = %c%c%c%c",
+-					mcu->vdrinfo_bin[0], mcu->vdrinfo_bin[1], mcu->vdrinfo_bin[2], mcu->vdrinfo_bin[3],
+-					mcu->vdrinfo_mcu[0], mcu->vdrinfo_mcu[1], mcu->vdrinfo_mcu[2], mcu->vdrinfo_mcu[3]);
+-			}
++		if (vdrinfo_bin <= vdrinfo_mcu) {
++			info("Do not update MCU firmware. VDRINFO binary ver = %c%c%c%c, module ver = %c%c%c%c",
++				mcu->vdrinfo_bin[0], mcu->vdrinfo_bin[1], mcu->vdrinfo_bin[2], mcu->vdrinfo_bin[3],
++				mcu->vdrinfo_mcu[0], mcu->vdrinfo_mcu[1], mcu->vdrinfo_mcu[2], mcu->vdrinfo_mcu[3]);
+ 		}
+-//#endif
++#endif
+ 	}
+ 
+ 	msleep(50);
+@@ -2506,16 +2503,14 @@ int is_ois_init_mcu(struct v4l2_subdev *subdev)
+ 			if (ret < 0)
+ 				err("ois gyro data write is fail");
+ 
+-//#if !IS_ENABLED(SIMPLIFY_OIS_INIT)
+-			if (!mcd_simplify_ois_init) {
+-				ret = is_ois_set_reg_u16(client, R_OIS_CMD_XCOEF_M1_1,  ois_pinfo.wide_romdata.xcoef);
+-				ret |= is_ois_set_reg_u16(client, R_OIS_CMD_YCOEF_M1_1, ois_pinfo.wide_romdata.ycoef);
++#if !IS_ENABLED(SIMPLIFY_OIS_INIT)
++			ret = is_ois_set_reg_u16(client, R_OIS_CMD_XCOEF_M1_1,  ois_pinfo.wide_romdata.xcoef);
++			ret |= is_ois_set_reg_u16(client, R_OIS_CMD_YCOEF_M1_1, ois_pinfo.wide_romdata.ycoef);
+ #ifdef CAMERA_2ND_OIS
+-				ret |= is_ois_set_reg_u16(client, R_OIS_CMD_XCOEF_M2_1, ois_pinfo.tele_romdata.xcoef);
+-				ret |= is_ois_set_reg_u16(client, R_OIS_CMD_YCOEF_M2_1, ois_pinfo.tele_romdata.ycoef);
++			ret |= is_ois_set_reg_u16(client, R_OIS_CMD_XCOEF_M2_1, ois_pinfo.tele_romdata.xcoef);
++			ret |= is_ois_set_reg_u16(client, R_OIS_CMD_YCOEF_M2_1, ois_pinfo.tele_romdata.ycoef);
++#endif
+ #endif
+-			}
+-//#endif
+ 
+ 			if (ret < 0)
+ 				err("ois coef data write is fail");
+@@ -2606,7 +2601,9 @@ int is_ois_set_ggfadeupdown_mcu(struct v4l2_subdev *subdev, int up, int down)
+ 	u8 status = 0;
+ 	int retries = 100;
+ 	u8 data[2];
++#if !IS_ENABLED(SIMPLIFY_OIS_INIT)
+ 	u8 write_data[4] = {0, };
++#endif
+ #ifdef USE_OIS_SLEEP_MODE
+ 	u8 read_sensorStart = 0;
+ #endif
+@@ -2684,21 +2681,19 @@ int is_ois_set_ggfadeupdown_mcu(struct v4l2_subdev *subdev, int up, int down)
+ 	 * write 0x3F558106
+ 	 * write 0x3F558106
+ 	 */
+-//#if !IS_ENABLED(SIMPLIFY_OIS_INIT)
+-	if (!mcd_simplify_ois_init) {
+-		write_data[0] = 0x06;
+-		write_data[1] = 0x81;
+-		write_data[2] = 0x55;
+-		write_data[3] = 0x3F;
+-		is_ois_set_reg_multi(client, R_OIS_CMD_ANGLE_COMP1, write_data, 4);
+-
+-		write_data[0] = 0x06;
+-		write_data[1] = 0x81;
+-		write_data[2] = 0x55;
+-		write_data[3] = 0x3F;
+-		is_ois_set_reg_multi(client, R_OIS_CMD_ANGLE_COMP5, write_data, 4);
+-	}
+-//#endif
++#if !IS_ENABLED(SIMPLIFY_OIS_INIT)
++	write_data[0] = 0x06;
++	write_data[1] = 0x81;
++	write_data[2] = 0x55;
++	write_data[3] = 0x3F;
++	is_ois_set_reg_multi(client, R_OIS_CMD_ANGLE_COMP1, write_data, 4);
++
++	write_data[0] = 0x06;
++	write_data[1] = 0x81;
++	write_data[2] = 0x55;
++	write_data[3] = 0x3F;
++	is_ois_set_reg_multi(client, R_OIS_CMD_ANGLE_COMP5, write_data, 4);
++#endif
+ 
+ #ifdef USE_OIS_SLEEP_MODE
+ 	/* if camera is already started, skip VDIS setting */
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-otprom.c b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-otprom.c
+index 4fb41eea8643..c24aeb4dd280 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-otprom.c
++++ b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-device-otprom.c
+@@ -85,18 +85,14 @@ static int sensor_otprom_probe(struct i2c_client *client,
+ 	i2c_set_clientdata(client, otprom);
+ 
+ 	if (client->dev.of_node) {
+-//#if defined(CAMERA_UWIDE_DUALIZED)
+-		if (mcd_camera_uwide_dualized) {
+-			if(otprom->driver_data == ROM_ID_REAR3)
+-				is_sec_set_rear3_dualized_rom_probe();
+-		}
+-//#endif
+-//#if defined(FRONT_OTPROM_EEPROM)
+-		if (mcd_front_otprom_eeprom) {
+-			if(otprom->driver_data == ROM_ID_FRONT)
+-				is_sec_set_front_dualized_rom_probe();
+-		}
+-//#endif
++#if defined(CAMERA_UWIDE_DUALIZED)
++		if(otprom->driver_data == ROM_ID_REAR3)
++			is_sec_set_rear3_dualized_rom_probe();
++#endif
++#if defined(FRONT_OTPROM_EEPROM)
++		if(otprom->driver_data == ROM_ID_FRONT)
++			is_sec_set_front_dualized_rom_probe();
++#endif
+ 		if(is_vendor_rom_parse_dt(client->dev.of_node, otprom->driver_data)) {
+ 			probe_err("parsing device tree is fail");
+ 			kfree(otprom);
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sec-define.c b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sec-define.c
+index 1cdec26ba23d..08dbb2a7285f 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sec-define.c
++++ b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sec-define.c
+@@ -233,29 +233,25 @@ EXPORT_SYMBOL_GPL(is_sec_set_front_dualized_rom_probe);
+ 
+ int is_sec_get_sysfs_finfo(struct is_rom_info **finfo, int rom_id)
+ {
+-//#if defined(CAMERA_UWIDE_DUALIZED)
+-	if (mcd_camera_uwide_dualized) {
+-		if(rom_id == ROM_ID_REAR3 && rear3_dualized_rom_probe) {
+-			*finfo = &sysfs_finfo_rear3_otp;
+-			rear3_dualized_rom_probe = false;
+-		}
+-		else {
+-			*finfo = &sysfs_finfo[rom_id];
+-		}
+-//#elif defined(FRONT_OTPROM_EEPROM)
+-	} else if (mcd_front_otprom_eeprom) {
+-		if(rom_id == ROM_ID_FRONT && front_dualized_rom_probe) {
+-			*finfo = &sysfs_finfo_front_otp;
+-			front_dualized_rom_probe = false;
+-		}
+-		else {
+-			*finfo = &sysfs_finfo[rom_id];
+-		}
+-//#else
+-	} else {
++#if defined(CAMERA_UWIDE_DUALIZED)
++	if(rom_id == ROM_ID_REAR3 && rear3_dualized_rom_probe) {
++		*finfo = &sysfs_finfo_rear3_otp;
++		rear3_dualized_rom_probe = false;
++	}
++	else {
+ 		*finfo = &sysfs_finfo[rom_id];
+-//#endif
+ 	}
++#elif defined(FRONT_OTPROM_EEPROM)
++	if(rom_id == ROM_ID_FRONT && front_dualized_rom_probe) {
++		*finfo = &sysfs_finfo_front_otp;
++		front_dualized_rom_probe = false;
++	}
++	else {
++		*finfo = &sysfs_finfo[rom_id];
++	}
++#else
++	*finfo = &sysfs_finfo[rom_id];
++#endif
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(is_sec_get_sysfs_finfo);
+@@ -1811,8 +1807,7 @@ int is_sec_readcal_otprom_hi1339(int rom_id)
+ 	subdev_cis = sensor_peri->subdev_cis;
+ 
+ #if defined(FRONT_OTPROM_EEPROM)
+-	if (mcd_front_otprom_eeprom)
+-		sysfs_finfo[ROM_ID_FRONT] = sysfs_finfo_front_otp;
++	sysfs_finfo[ROM_ID_FRONT] = sysfs_finfo_front_otp;
+ #endif
+ 	is_sec_get_sysfs_finfo(&finfo, rom_id);
+ 	is_sec_get_cal_buf(&buf, rom_id);
+@@ -2857,9 +2852,11 @@ int is_sec_readcal_otprom(int rom_id)
+ 		case SENSOR_NAME_GC02M1:
+ 			ret = is_sec_readcal_otprom_gc02m1(rom_id);
+ 			break;
++#if defined(CAMERA_UWIDE_DUALIZED)
+ 		case SENSOR_NAME_HI1336:
+ 			ret = is_sec_readcal_otprom_hi1336(rom_id);
+ 			break;
++#endif
+ 		case SENSOR_NAME_S5K4HA:
+ 			ret = is_sec_readcal_otprom_4ha(rom_id);
+ 			break;
+@@ -5003,24 +5000,21 @@ int is_get_remosaic_cal_buf(int sensor_position, char **buf, int *size)
+ 	
+ 	start_addr = finfo->rom_xtc_cal_data_start_addr;
+ 
+-//#ifdef MODIFY_CAL_MAP_FOR_SWREMOSAIC_LIB
++#ifdef MODIFY_CAL_MAP_FOR_SWREMOSAIC_LIB
+ // Modify cal_buf for some sensors (if required)
+-	if (mcd_modify_cal_map_for_swremosaic_lib) {
+-		switch(sensor_id) {
+-			case SENSOR_NAME_S5KJN1:
+-				ret = is_modify_remosaic_cal_buf(sensor_position, cal_buf, buf, size);
+-				break;
+-			default:
+-				*buf  = &cal_buf[start_addr];
+-				*size = finfo->rom_xtc_cal_data_size;
+-				break;
+-		}
+-//#else
+-	} else {
+-		*buf  = &cal_buf[start_addr];
+-		*size = finfo->rom_xtc_cal_data_size;
++	switch(sensor_id) {
++		case SENSOR_NAME_S5KJN1:
++			ret = is_modify_remosaic_cal_buf(sensor_position, cal_buf, buf, size);
++			break;
++		default:
++			*buf  = &cal_buf[start_addr];
++			*size = finfo->rom_xtc_cal_data_size;
++			break;
+ 	}
+-//#endif
++#else
++	*buf  = &cal_buf[start_addr];
++	*size = finfo->rom_xtc_cal_data_size;
++#endif
+ 	return ret;
+ }
+ 
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sysfs.c b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sysfs.c
+index b30ce9814c89..f1d3a7de535f 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sysfs.c
++++ b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-sysfs.c
+@@ -1418,23 +1418,21 @@ static ssize_t camera_rear3_dualcal_show(struct device *dev,
+ 	}
+ 
+ #ifdef READ_DUAL_CAL_FIRMWARE_DATA
+-	if (mcd_read_dual_cal_firmware_data) {
+-		info("  load multical Cal Data %s \n", DUAL_CAL_DATA_PATH);
+-		copy_size = DUAL_CAL_DATA_SIZE_DEFAULT;
++	info("  load multical Cal Data %s \n", DUAL_CAL_DATA_PATH);
++	copy_size = DUAL_CAL_DATA_SIZE_DEFAULT;
+ #ifdef USE_KERNEL_VFS_READ_WRITE
+-		ret = is_dual_cal_read_firmware(DUAL_CAL_DATA_PATH, 0,
+-				DUAL_CAL_DATA_SIZE_DEFAULT);
++	ret = is_dual_cal_read_firmware(DUAL_CAL_DATA_PATH, 0,
++			DUAL_CAL_DATA_SIZE_DEFAULT);
+ #else
+-		ret = is_dual_cal_read_firmware(dev, DUAL_CAL_DATA_PATH, DUAL_CAL_DATA_BIN_NAME, 0,
+-				DUAL_CAL_DATA_SIZE_DEFAULT);
++	ret = is_dual_cal_read_firmware(dev, DUAL_CAL_DATA_PATH, DUAL_CAL_DATA_BIN_NAME, 0,
++			DUAL_CAL_DATA_SIZE_DEFAULT);
+ #endif
+-		if (ret < 0) {
+-			err("CAL read %s is fail\n", DUAL_CAL_DATA_PATH);
+-			return 0;
+-		} else {
+-			info("%s: success to get dualcal from firmware of %d", __func__, SENSOR_POSITION_REAR2);
+-			memcpy(buf, dual_cal_data, copy_size);
+-		}
++	if (ret < 0) {
++		err("CAL read %s is fail\n", DUAL_CAL_DATA_PATH);
++		return 0;
++	} else {
++		info("%s: success to get dualcal from firmware of %d", __func__, SENSOR_POSITION_REAR2);
++		memcpy(buf, dual_cal_data, copy_size);
+ 	}
+ #endif
+ 
+@@ -1457,22 +1455,20 @@ static ssize_t camera_rear3_dualcal_size_show(struct device *dev,
+ 	}
+ 
+ #ifdef READ_DUAL_CAL_FIRMWARE_DATA
+-	if (mcd_read_dual_cal_firmware_data) {
+-		info("  load multical Cal Data %s \n", DUAL_CAL_DATA_PATH);
+-		copy_size = DUAL_CAL_DATA_SIZE_DEFAULT;
++	info("  load multical Cal Data %s \n", DUAL_CAL_DATA_PATH);
++	copy_size = DUAL_CAL_DATA_SIZE_DEFAULT;
+ #ifdef USE_KERNEL_VFS_READ_WRITE
+-		ret = is_dual_cal_read_firmware(DUAL_CAL_DATA_PATH, 0,
+-				DUAL_CAL_DATA_SIZE_DEFAULT);
++	ret = is_dual_cal_read_firmware(DUAL_CAL_DATA_PATH, 0,
++			DUAL_CAL_DATA_SIZE_DEFAULT);
+ #else
+-		ret = is_dual_cal_read_firmware(dev, DUAL_CAL_DATA_PATH, DUAL_CAL_DATA_BIN_NAME, 0,
+-				DUAL_CAL_DATA_SIZE_DEFAULT);
++	ret = is_dual_cal_read_firmware(dev, DUAL_CAL_DATA_PATH, DUAL_CAL_DATA_BIN_NAME, 0,
++			DUAL_CAL_DATA_SIZE_DEFAULT);
+ #endif
+-		if (ret < 0) {
+-			err("CAL read %s is fail\n", DUAL_CAL_DATA_PATH);
+-			return 0;
+-		} else {
+-			info("%s: success to get dualcal from firmware of %d", __func__, SENSOR_POSITION_REAR2);
+-		}
++	if (ret < 0) {
++		err("CAL read %s is fail\n", DUAL_CAL_DATA_PATH);
++		return 0;
++	} else {
++		info("%s: success to get dualcal from firmware of %d", __func__, SENSOR_POSITION_REAR2);
+ 	}
+ #endif
+ 
+@@ -2898,7 +2894,7 @@ static ssize_t camera_rear_moduleid_show(struct device *dev,
+ }
+ 
+ #if defined(CAMERA_EEPROM_SUPPORT_FRONT)
+-//#ifndef CAMERA_FRONT_FIXED_FOCUS
++#ifndef CAMERA_FRONT_FIXED_FOCUS
+ static ssize_t camera_front_afcal_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+@@ -2912,7 +2908,7 @@ static ssize_t camera_front_paf_cal_check_show(struct device *dev,
+ 	return camera_paf_cal_check_show(buf, CAM_INFO_FRONT, FNUMBER_1ST);
+ }
+ #endif
+-//#endif
++#endif
+ static ssize_t camera_front_moduleid_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
+@@ -3435,12 +3431,12 @@ static DEVICE_ATTR(front_phy_tune, S_IRUGO, camera_front_phy_tune_show, NULL);
+ #if defined(CAMERA_EEPROM_SUPPORT_FRONT)
+ static DEVICE_ATTR(front_camfw_full, S_IRUGO, camera_front_camfw_full_show, NULL);
+ static DEVICE_ATTR(front_checkfw_factory, S_IRUGO, camera_front_checkfw_factory_show, NULL);
+-//#ifndef CAMERA_FRONT_FIXED_FOCUS
++#ifndef CAMERA_FRONT_FIXED_FOCUS
+ static DEVICE_ATTR(front_afcal, S_IRUGO, camera_front_afcal_show, NULL);
+ #ifdef CAMERA_FRONT_PAFCAL
+ static DEVICE_ATTR(front_paf_cal_check, S_IRUGO, camera_front_paf_cal_check_show, NULL);
+ #endif
+-//#endif
++#endif
+ static DEVICE_ATTR(front_mtf_exif, S_IRUGO, camera_front_mtf_exif_show, NULL);
+ static DEVICE_ATTR(front_sensorid_exif, S_IRUGO, camera_front_sensorid_exif_show, NULL);
+ static DEVICE_ATTR(front_moduleid, S_IRUGO, camera_front_moduleid_show, NULL);
+@@ -3672,20 +3668,18 @@ int is_create_sysfs(struct is_core *core)
+ 			pr_err("failed to create front device file, %s\n",
+ 					dev_attr_front_mtf_exif.attr.name);
+ 		}
+-//#ifndef CAMERA_FRONT_FIXED_FOCUS
+-		if (!mcd_camera_front_fixed_focus) {
++#ifndef CAMERA_FRONT_FIXED_FOCUS
+ #ifdef CAMERA_FRONT_PAFCAL
+-			if (device_create_file(camera_front_dev, &dev_attr_front_paf_cal_check) < 0) {
+-				pr_err("failed to create front device file, %s\n",
+-						dev_attr_front_paf_cal_check.attr.name);
+-			}
++		if (device_create_file(camera_front_dev, &dev_attr_front_paf_cal_check) < 0) {
++			pr_err("failed to create front device file, %s\n",
++					dev_attr_front_paf_cal_check.attr.name);
++		}
+ #endif
+-			if (device_create_file(camera_front_dev, &dev_attr_front_afcal) < 0) {
+-				pr_err("failed to create front device file, %s\n",
+-						dev_attr_front_afcal.attr.name);
+-			}
++		if (device_create_file(camera_front_dev, &dev_attr_front_afcal) < 0) {
++			pr_err("failed to create front device file, %s\n",
++					dev_attr_front_afcal.attr.name);
+ 		}
+-//#endif
++#endif
+ 		if (device_create_file(camera_front_dev, &dev_attr_front_moduleid) < 0) {
+ 			pr_err("failed to create front device file, %s\n",
+ 					dev_attr_front_moduleid.attr.name);
+@@ -3818,23 +3812,21 @@ int is_create_sysfs(struct is_core *core)
+ 				dev_attr_rear_phy_tune.attr.name);
+ 		}
+ #ifdef CAMERA_REAR_DUAL_CAL
+-		if (mcd_camera_rear_dual_cal) {
+-			if (device_create_file(camera_rear_dev, &dev_attr_rear_dualcal) < 0) {
+-				pr_err("failed to create rear device file, %s\n",
+-						dev_attr_rear_dualcal.attr.name);
+-			}
+-			if (device_create_file(camera_rear_dev, &dev_attr_rear2_dualcal) < 0) {
+-				pr_err("failed to create rear device file, %s\n",
+-						dev_attr_rear_dualcal.attr.name);
+-			}
+-			if (device_create_file(camera_rear_dev, &dev_attr_rear3_dualcal) < 0) {
+-				pr_err("failed to create rear device file, %s\n",
+-						dev_attr_rear_dualcal.attr.name);
+-			}
+-			if (device_create_file(camera_rear_dev, &dev_attr_rear3_dualcal_size) < 0) {
+-				pr_err("failed to create rear device file, %s\n",
+-						dev_attr_rear_dualcal.attr.name);
+-			}
++		if (device_create_file(camera_rear_dev, &dev_attr_rear_dualcal) < 0) {
++			pr_err("failed to create rear device file, %s\n",
++					dev_attr_rear_dualcal.attr.name);
++		}
++		if (device_create_file(camera_rear_dev, &dev_attr_rear2_dualcal) < 0) {
++			pr_err("failed to create rear device file, %s\n",
++					dev_attr_rear_dualcal.attr.name);
++		}
++		if (device_create_file(camera_rear_dev, &dev_attr_rear3_dualcal) < 0) {
++			pr_err("failed to create rear device file, %s\n",
++					dev_attr_rear_dualcal.attr.name);
++		}
++		if (device_create_file(camera_rear_dev, &dev_attr_rear3_dualcal_size) < 0) {
++			pr_err("failed to create rear device file, %s\n",
++					dev_attr_rear_dualcal.attr.name);
+ 		}
+ #endif
+ 
+@@ -4185,14 +4177,12 @@ int is_destroy_sysfs(struct is_core *core)
+ 		device_remove_file(camera_front_dev, &dev_attr_front_caminfo);
+ 		device_remove_file(camera_front_dev, &dev_attr_front_camfw);
+ #if defined(CAMERA_EEPROM_SUPPORT_FRONT)
+-//#ifndef CAMERA_FRONT_FIXED_FOCUS
+-		if (!mcd_camera_front_fixed_focus) {
+-			device_remove_file(camera_front_dev, &dev_attr_front_afcal);
++#ifndef CAMERA_FRONT_FIXED_FOCUS
++		device_remove_file(camera_front_dev, &dev_attr_front_afcal);
+ #ifdef CAMERA_FRONT_PAFCAL
+-			device_remove_file(camera_front_dev, &dev_attr_front_paf_cal_check);
++		device_remove_file(camera_front_dev, &dev_attr_front_paf_cal_check);
++#endif
+ #endif
+-		}
+-//#endif
+ 		device_remove_file(camera_front_dev, &dev_attr_front_camfw_full);
+ 		device_remove_file(camera_front_dev, &dev_attr_front_checkfw_factory);
+ 		device_remove_file(camera_front_dev, &dev_attr_front_moduleid);
+@@ -4228,12 +4218,10 @@ int is_destroy_sysfs(struct is_core *core)
+ 		device_remove_file(camera_rear_dev, &dev_attr_rear_moduleid);
+ 		device_remove_file(camera_rear_dev, &dev_attr_rear_phy_tune);
+ #ifdef CAMERA_REAR_DUAL_CAL
+-		if (mcd_camera_rear_dual_cal) {
+-			device_remove_file(camera_rear_dev, &dev_attr_rear_dualcal);
+-			device_remove_file(camera_rear_dev, &dev_attr_rear2_dualcal);
+-			device_remove_file(camera_rear_dev, &dev_attr_rear3_dualcal);
+-			device_remove_file(camera_rear_dev, &dev_attr_rear3_dualcal_size);
+-		}
++		device_remove_file(camera_rear_dev, &dev_attr_rear_dualcal);
++		device_remove_file(camera_rear_dev, &dev_attr_rear2_dualcal);
++		device_remove_file(camera_rear_dev, &dev_attr_rear3_dualcal);
++		device_remove_file(camera_rear_dev, &dev_attr_rear3_dualcal_size);
+ #endif
+ #ifdef CAMERA_REAR2
+ 		device_remove_file(camera_rear_dev, &dev_attr_rear2_caminfo);
+diff --git a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-vender.c b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-vender.c
+index 7ef9624d29a4..b3610be92139 100755
+--- a/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-vender.c
++++ b/drivers/media/platform/exynos/camera/vendor/mcd_v2/is-vender.c
+@@ -1532,24 +1532,21 @@ int is_vender_hw_init(struct is_vender *vender)
+ 			ret = is_sec_run_fw_sel(i);
+ 			if (ret) {
+ 				err("is_sec_run_fw_sel for ROM_ID(%d) is fail(%d)", i, ret);
+-//#if defined(CAMERA_UWIDE_DUALIZED)
+-				if (mcd_camera_uwide_dualized) {
+-					if(i == ROM_ID_REAR3) {
+-						ret = is_sec_run_fw_sel(i);
+-						if (ret) {
+-							err("is_sec_run_fw_sel for dualized ROM_ID(%d) is fail(%d)", i, ret);
+-						}
++#if defined(CAMERA_UWIDE_DUALIZED)
++				if(i == ROM_ID_REAR3) {
++					ret = is_sec_run_fw_sel(i);
++					if (ret) {
++						err("is_sec_run_fw_sel for dualized ROM_ID(%d) is fail(%d)", i, ret);
+ 					}
+-//#elif defined(FRONT_OTPROM_EEPROM)
+-				} else if (mcd_front_otprom_eeprom) {
+-					if(i == ROM_ID_FRONT) {
+-						ret = is_sec_run_fw_sel(i);
+-						if (ret) {
+-							err("is_sec_run_fw_sel for dualized ROM_ID(%d) is fail(%d)", i, ret);
+-						}
++				}
++#elif defined(FRONT_OTPROM_EEPROM)
++				if(i == ROM_ID_FRONT) {
++					ret = is_sec_run_fw_sel(i);
++					if (ret) {
++						err("is_sec_run_fw_sel for dualized ROM_ID(%d) is fail(%d)", i, ret);
+ 					}
+ 				}
+-//#endif
++#endif
+ 			}
+ 		}
+ 	}
+@@ -1584,8 +1581,7 @@ int is_vender_hw_init(struct is_vender *vender)
+ 	}
+ 
+ #ifdef USE_CAMERA_ADAPTIVE_MIPI
+-	if (mcd_use_camera_adaptive_mipi)
+-		is_vendor_register_ril_notifier();
++	is_vendor_register_ril_notifier();
+ #endif
+ 	is_hw_init_running = false;
+ 	info("hw init done\n");
+diff --git a/drivers/misc/sec_detect.c b/drivers/misc/sec_detect.c
+index 184077173c4a..3d2893f32d5a 100644
+--- a/drivers/misc/sec_detect.c
++++ b/drivers/misc/sec_detect.c
+@@ -38,70 +38,6 @@ EXPORT_SYMBOL(sec_legacy_sinput);
+ EXPORT_SYMBOL(sec_legacy_usbpd);
+ EXPORT_SYMBOL(sec_slsi_usbpd);
+ 
+-// Camera params
+-bool mcd_disable_dual_sync = false;
+-EXPORT_SYMBOL(mcd_disable_dual_sync);
+-
+-bool mcd_camera_rear_dual_cal = false;
+-EXPORT_SYMBOL(mcd_camera_rear_dual_cal);
+-
+-bool mcd_use_leds_flash_charging_voltage_control = false;
+-EXPORT_SYMBOL(mcd_use_leds_flash_charging_voltage_control);
+-
+-bool mcd_use_camera_adaptive_mipi = false;
+-EXPORT_SYMBOL(mcd_use_camera_adaptive_mipi);
+-
+-bool mcd_use_imx258_13mp_full_size = false;
+-EXPORT_SYMBOL(mcd_use_imx258_13mp_full_size);
+-
+-bool mcd_apply_mirror_vertical_flip = false;
+-EXPORT_SYMBOL(mcd_apply_mirror_vertical_flip);
+-
+-bool mcd_simplify_ois_init = false;
+-EXPORT_SYMBOL(mcd_simplify_ois_init);
+-
+-bool mcd_modify_cal_map_for_swremosaic_lib = false;
+-EXPORT_SYMBOL(mcd_modify_cal_map_for_swremosaic_lib);
+-
+-bool mcd_front_otprom_eeprom = false;
+-EXPORT_SYMBOL(mcd_front_otprom_eeprom);
+-
+-bool mcd_camera_uwide_dualized = false;
+-EXPORT_SYMBOL(mcd_camera_uwide_dualized);
+-
+-bool mcd_read_dual_cal_firmware_data = false;
+-EXPORT_SYMBOL(mcd_read_dual_cal_firmware_data);
+-
+-bool mcd_camera_front_fixed_focus = false;
+-EXPORT_SYMBOL(mcd_camera_front_fixed_focus);
+-
+-bool mcd_config_camera_eeprom_dualized = false;
+-EXPORT_SYMBOL(mcd_config_camera_eeprom_dualized);
+-
+-bool mcd_config_check_hw_version_for_mcu_fw_upload = false;
+-EXPORT_SYMBOL(mcd_config_check_hw_version_for_mcu_fw_upload);
+-
+-bool mcd_use_camera_act_driver_soft_landing = false;
+-EXPORT_SYMBOL(mcd_use_camera_act_driver_soft_landing);
+-
+-bool mcd_use_ois_hall_data_for_vdis = false;
+-EXPORT_SYMBOL(mcd_use_ois_hall_data_for_vdis);
+-
+-bool mcd_use_hi1336c_setfile = false;
+-EXPORT_SYMBOL(mcd_use_hi1336c_setfile);
+-
+-bool mcd_camera_use_aois = false;
+-EXPORT_SYMBOL(mcd_camera_use_aois);
+-
+-bool mcd_cal_for_hw_ggc_a26x = false;
+-EXPORT_SYMBOL(mcd_cal_for_hw_ggc_a26x);
+-
+-bool mcd_use_ois_reset_autotest = false;
+-EXPORT_SYMBOL(mcd_use_ois_reset_autotest);
+-
+-bool mcd_ois_angle_support = false;
+-EXPORT_SYMBOL(mcd_ois_angle_support);
+-
+ #ifdef CONFIG_SEC_DETECT_SYSFS
+ // Sysfs attribute to show the current device name
+ static ssize_t device_name_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+@@ -134,97 +70,6 @@ static struct attribute_group attr_group = {
+ static struct kobject *device_kobj;
+ #endif
+ 
+-static inline void setup_camera_params(void) {
+-	switch (sec_current_device) {
+-	case SEC_A25:
+-		mcd_camera_rear_dual_cal = true;
+-		mcd_use_imx258_13mp_full_size = true;
+-		mcd_use_leds_flash_charging_voltage_control = true;
+-		mcd_use_ois_hall_data_for_vdis = true;
+-		mcd_apply_mirror_vertical_flip = true;
+-		mcd_front_otprom_eeprom = true;
+-		mcd_modify_cal_map_for_swremosaic_lib = true;
+-		mcd_simplify_ois_init = true;
+-		mcd_use_camera_adaptive_mipi = true;
+-		mcd_read_dual_cal_firmware_data = true;
+-		mcd_camera_use_aois = true;
+-		break;
+-	case SEC_A26XS:
+-		mcd_camera_rear_dual_cal = true;
+-		mcd_use_imx258_13mp_full_size = true;
+-		mcd_use_leds_flash_charging_voltage_control = true;
+-		mcd_use_ois_hall_data_for_vdis = true;
+-		mcd_apply_mirror_vertical_flip = true;
+-		mcd_front_otprom_eeprom = true;
+-		mcd_modify_cal_map_for_swremosaic_lib = true;
+-		mcd_simplify_ois_init = true;
+-		mcd_use_camera_adaptive_mipi = true;
+-		mcd_read_dual_cal_firmware_data = true;
+-		mcd_camera_use_aois = true;
+-		mcd_cal_for_hw_ggc_a26x = true;
+-		mcd_use_ois_reset_autotest = true;
+-		mcd_ois_angle_support = true;
+-		break;
+-	case SEC_A33:
+-		mcd_camera_front_fixed_focus = true;
+-		mcd_camera_rear_dual_cal = true;
+-		mcd_config_check_hw_version_for_mcu_fw_upload = true;
+-		mcd_disable_dual_sync = true;
+-		mcd_use_imx258_13mp_full_size = true;
+-		mcd_use_leds_flash_charging_voltage_control = true;
+-		mcd_use_ois_hall_data_for_vdis = true;
+-		mcd_camera_uwide_dualized = true;
+-		mcd_read_dual_cal_firmware_data = true;
+-		break;
+-	case SEC_A53:
+-		mcd_camera_front_fixed_focus = true;
+-		mcd_camera_rear_dual_cal = true;
+-		mcd_disable_dual_sync = true;
+-		mcd_use_ois_hall_data_for_vdis = true;
+-		mcd_camera_uwide_dualized = true;
+-		mcd_read_dual_cal_firmware_data = true;
+-		mcd_use_leds_flash_charging_voltage_control = true;
+-		mcd_use_hi1336c_setfile = true;
+-		break;
+-	case SEC_M33:
+-		mcd_camera_rear_dual_cal = true;
+-		mcd_disable_dual_sync = true;
+-		mcd_modify_cal_map_for_swremosaic_lib = true;
+-		mcd_use_camera_adaptive_mipi = true;
+-		mcd_use_camera_act_driver_soft_landing = true;
+-		mcd_read_dual_cal_firmware_data = true;
+-		break;
+-	case SEC_M34:
+-		mcd_camera_rear_dual_cal = true;
+-		mcd_use_ois_hall_data_for_vdis = true;
+-		mcd_apply_mirror_vertical_flip = true;
+-		mcd_modify_cal_map_for_swremosaic_lib = true;
+-		mcd_simplify_ois_init = true;
+-		mcd_use_camera_adaptive_mipi = true;
+-		mcd_read_dual_cal_firmware_data = true;
+-		mcd_use_leds_flash_charging_voltage_control = true;	// Not enabled in stock, but required here?
+-		mcd_camera_use_aois = true;
+-		break;
+-	case SEC_GTA4XLS:
+-		mcd_use_camera_act_driver_soft_landing = true;
+-		break;
+-	default:
+-		break;
+-	}
+-}
+-
+-// New function to print machine name and sec_ variables
+-static inline void print_sec_variables(const char *machine_name) {
+-	SEC_DETECT_LOG("Current machine name: %s\n", machine_name);
+-	SEC_DETECT_LOG("sec_needs_blic = %s\n", sec_needs_blic ? "true" : "false");
+-	SEC_DETECT_LOG("sec_needs_decon = %s\n", sec_needs_decon ? "true" : "false");
+-	SEC_DETECT_LOG("sec_doze = %s\n", sec_doze ? "true" : "false");
+-	SEC_DETECT_LOG("sec_lcd_device = %s\n", sec_lcd_device ? "true" : "false");
+-	SEC_DETECT_LOG("sec_legacy_sinput = %s\n", sec_legacy_sinput ? "true" : "false");
+-	SEC_DETECT_LOG("sec_legacy_usbpd = %s\n", sec_legacy_usbpd ? "true" : "false");
+-	SEC_DETECT_LOG("sec_slsi_usbpd = %s\n", sec_slsi_usbpd ? "true" : "false");
+-}
+-
+ int sec_detect_init(void) {
+ 	struct device_node *root;
+ 	const char *machine_name;
+@@ -301,8 +146,6 @@ int sec_detect_init(void) {
+ 		kobject_put(device_kobj);
+ #endif
+ 
+-	setup_camera_params();
+-
+ 	return retval;
+ }
+ 
+diff --git a/include/linux/sec_detect.h b/include/linux/sec_detect.h
+index 205c89769598..f23fadfb76a9 100644
+--- a/include/linux/sec_detect.h
++++ b/include/linux/sec_detect.h
+@@ -49,29 +49,6 @@ extern bool sec_legacy_sinput;
+ extern bool sec_legacy_usbpd;
+ extern bool sec_slsi_usbpd;
+ 
+-// Camera params
+-extern bool mcd_disable_dual_sync;
+-extern bool mcd_camera_rear_dual_cal;
+-extern bool mcd_use_leds_flash_charging_voltage_control;
+-extern bool mcd_use_camera_adaptive_mipi;
+-extern bool mcd_use_imx258_13mp_full_size;
+-extern bool mcd_apply_mirror_vertical_flip;
+-extern bool mcd_simplify_ois_init;
+-extern bool mcd_camera_front_fixed_focus;
+-extern bool mcd_modify_cal_map_for_swremosaic_lib;
+-extern bool mcd_front_otprom_eeprom;
+-extern bool mcd_camera_uwide_dualized;
+-extern bool mcd_read_dual_cal_firmware_data;
+-extern bool mcd_config_camera_eeprom_dualized;
+-extern bool mcd_config_check_hw_version_for_mcu_fw_upload;
+-extern bool mcd_use_camera_act_driver_soft_landing;
+-extern bool mcd_use_ois_hall_data_for_vdis;
+-extern bool mcd_use_hi1336c_setfile;
+-extern bool mcd_camera_use_aois;
+-extern bool mcd_cal_for_hw_ggc_a26x;
+-extern bool mcd_use_ois_reset_autotest;
+-extern bool mcd_ois_angle_support;
+-
+ #ifdef CONFIG_SEC_DETECT_SYSFS
+ extern char sec_current_device_name[32];
+ #endif
+-- 
+2.49.0
+
