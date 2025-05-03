@@ -7,7 +7,7 @@ deviceinfo_name="Samsung Galaxy M33 5G"
 deviceinfo_manufacturer="Samsung"
 deviceinfo_codename="samsung-m33x"
 deviceinfo_year="2022"
-deviceinfo_dtb="exynos/dtb"
+deviceinfo_dtb="exynos/s5e8825"
 deviceinfo_arch="aarch64"
 
 # Device related
