@@ -533,7 +533,7 @@ CONFIG_STACKPROTECTOR_PER_TASK=y
 #
 # Boot options
 #
-CONFIG_CMDLINE="ttynull stack_depot_disable=on kasan.stacktrace=off kvm-arm.mode=protected cgroup_disable=pressure cgroup.memory=nokmem"
+CONFIG_CMDLINE="console=tty0 PMOS_NOSPLASH ignore_loglevel pmos.debug-shell stack_depot_disable=on kasan.stacktrace=off kvm-arm.mode=protected cgroup_disable=pressure cgroup.memory=nokmem"
 # CONFIG_CMDLINE_FROM_BOOTLOADER is not set
 CONFIG_CMDLINE_EXTEND=y
 # CONFIG_CMDLINE_FORCE is not set
@@ -7400,7 +7400,6 @@ CONFIG_MANDATORY_FILE_LOCKING=y
 CONFIG_FS_ENCRYPTION=y
 CONFIG_FS_ENCRYPTION_ALGS=y
 CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
-CONFIG_FSCRYPT_SDP=y
 CONFIG_FS_VERITY=y
 # CONFIG_FS_VERITY_DEBUG is not set
 CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y
@@ -7653,9 +7652,9 @@ CONFIG_DEFAULT_SECURITY_SELINUX=y
 # CONFIG_DEFAULT_SECURITY_DAC is not set
 CONFIG_LSM="lockdown,yama,loadpin,safesetid,integrity,selinux,smack,tomoyo,apparmor,bpf"
 # CONFIG_DDAR is not set
-CONFIG_SDP=y
+# CONFIG_SDP is not set
 # CONFIG_SDP_KEY_DUMP is not set
-CONFIG_SELINUX_ENFORCING=y
+# CONFIG_SELINUX_ENFORCING is not set
 
 #
 # Kernel hardening options
@@ -7677,11 +7676,7 @@ CONFIG_INIT_ON_ALLOC_DEFAULT_ON=y
 # end of Memory initialization
 # end of Kernel hardening options
 
-CONFIG_GAF=y
-# CONFIG_GAF_V3 is not set
-# CONFIG_GAF_V4 is not set
-# CONFIG_GAF_V5 is not set
-CONFIG_GAF_V6=y
+# CONFIG_GAF is not set
 # CONFIG_MEMORY_ZEROISATION is not set
 # CONFIG_MZ_PAGE_V2 is not set
 # end of Security options
