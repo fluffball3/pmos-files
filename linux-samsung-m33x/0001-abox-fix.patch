@@ -1,0 +1,39 @@
+From ddf90fbb984ad55ad74f1333fedbd6aab5f723ad Mon Sep 17 00:00:00 2001
+From: fluffball3 <fluffball3@proton.me>
+Date: Thu, 8 May 2025 01:23:40 +0530
+Subject: [PATCH] abox fix
+
+---
+ drivers/media/radio/s610/radio-s610.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/radio/s610/radio-s610.c b/drivers/media/radio/s610/radio-s610.c
+index 3682374e6f6d..b805bb3d0f6c 100755
+--- a/drivers/media/radio/s610/radio-s610.c
++++ b/drivers/media/radio/s610/radio-s610.c
+@@ -1622,8 +1622,10 @@ static int s610_radio_fops_open(struct file *file)
+ 					"audio get_sync failed with error %d\n", ret);
+ 				goto err_open;
+ 			}
++#ifdef CONFIG_SND_SOC_SAMSUNG_AUDIO
+ 			abox_request_cpu_gear_ext(radio->a_dev,
+ 				ABOX_CPU_GEAR_CALL_KERNEL, ABOX_CPU_GEAR_MAX, "FM");
++#endif
+ 		}
+ #endif /* USE_AUDIO_PM */
+ 
+@@ -1738,9 +1740,10 @@ static int s610_radio_fops_release(struct file *file)
+ 		pm_runtime_put_sync(radio->dev);
+ #ifdef USE_AUDIO_PM
+ 		if (radio->a_dev) {
++#ifdef CONFIG_SND_SOC_SAMSUNG_AUDIO
+ 			abox_request_cpu_gear_ext(radio->a_dev,
+ 				ABOX_CPU_GEAR_CALL_KERNEL, ABOX_CPU_GEAR_MIN, "FM");
+-
++#endif
+ 			pm_runtime_put_sync(radio->a_dev);
+ 		}
+ #endif /* USE_AUDIO_PM */
+-- 
+2.49.0
+

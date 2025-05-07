@@ -17,7 +17,6 @@ makedepends="devicepkg-dev"
 source="
 	deviceinfo
 	modules-initfs
-	modules-load.conf
 "
 subpackages="$pkgname-nonfree-firmware:nonfree_firmware"
 
@@ -36,7 +35,6 @@ nonfree_firmware() {
 }
 
 sha512sums="
-97a572ad0991f5328da7b2c7f3fc6e8c39d73ff22e357bf4e7ae23b343706f4a3fd9831f81fbe17d07b7cbc2d7dacb9670af39a569bdb304b2f0c2db6404bf3e  deviceinfo
-e7d2fe5f496289be6ed8ae8597317cd5145bdc082613d0d621271ba73c8c7d865adefccbc4241f7539a06d5f5cc1ba70664fb7db994fdd4356b64a81c9afb1f2  modules-initfs
-c52c4a3571770696481b0a48bfa460c73c625f45b36cf54ab36306dab2d9862a95654c5bf91e9c361fa86fda493ff857fbd9300101c45cb5d71c8ed3a24720ec  modules-load.conf
+8063dde53c2e2d52f09f9f939950627c3de9d0215f1ae189b20e38b855e4843733f0940ec5e708985b87f2920840913e0b2d8742d992f5d7ed7e09476d6b98b5  deviceinfo
+41edc986313f0688423f4fb3923ba9d8eb9c191c4bf6720bafa8e244aa2a7b80044e6fd224641afe32cf3455eb626a1804c9b24560eb6ddd6d75849e09840edf  modules-initfs
 "

@@ -25,19 +25,18 @@ makedepends="
 	python3
 	linux-headers
 	gcc6
+	android-tools
 "
-
 	#clang
 	#clang18
 	#lld18
 	#llvm18
-#	mkdtboimg create "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb" --custom0=0x00000000 --custom1=0xff000000 --version=0 --page_size=2048 "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb"
-#CC=clang-18
-#HOSTCC=clang-18
-#LLVM=-18
+
+#CC="clang"
+#HOSTCC="clang"
+#LLVM=1
 #LLVM_IAS=1
 #CROSS_COMPILE=aarch64-alpine-linux-musl-
-
 # Compiler: GCC 6 (doesn't boot when compiled with newer versions)
 if [ "${CC:0:5}" != "gcc6-" ]; then
 	CC="gcc6-$CC"
@@ -48,11 +47,12 @@ fi
 #0001-Revert-SQUASH-exynos-camera-unify-all-camera-headers.patch
 # Source
 _repository="android_kernel_samsung_m33x"
-_commit="ba642fe8b8834435a826a1d2b41f84620397cbc9"
+_commit="ea68001d2ece043287d2ff4404a2beae6360715a"
 _config="config-$_flavor.$arch"
 source="
 	$pkgname-$_commit.tar.gz::https://github.com/fluffball3/$_repository/archive/$_commit.tar.gz
 	$_config
+	0001-abox-fix.patch
 "
 builddir="$srcdir/$_repository-$_commit"
 _outdir="out"
@@ -69,9 +69,11 @@ build() {
 	#export HOSTCC=clang-18
 	#export CROSS_COMPILE=aarch64-alpine-linux-musl-
 	#CC="${CC:-gcc}"
-	make O="$_outdir" ARCH="$_carch" PLATFORM_VERSION=12 CC="${CC:-gcc}" TARGET_SOC=s5e8825 \
+	make O="$_outdir" ARCH="$_carch" CC="${CC:-gcc}" PLATFORM_VERSION=12 TARGET_SOC=s5e8825 \
 		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-postmarketOS"
 	cp $_outdir/arch/$_carch/boot/Image.gz $_outdir/arch/$_carch/boot/Image
+	mkdtboimg create "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825bak.dtb" --custom0=0x00000000 --custom1=0xff000000 --version=0 --page_size=2048 "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb"
+	mv "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825bak.dtb" "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb"
 }
 
 package() {
@@ -86,6 +88,7 @@ package() {
 }
 
 sha512sums="
-7119a54a817d1386f0631b464192665615f72fb757888e514db0609d4e92d1ec561ef3fd963ef6fd17f13f8feb5317b1c14401c762caa586aace2373093b11c2  linux-samsung-m33x-91a2c8a6b9426a17845b4e092f2bbcd009669634.tar.gz
+b6fe7f6c82b18f62377da447eb613c5ffc9c865eaa81acff143aef0db9515e4a259004e18fad5f2f471b60583851f8733d9ab82621c9b7ef3346ea1f31411e94  linux-samsung-m33x-ea68001d2ece043287d2ff4404a2beae6360715a.tar.gz
 033584afa151bd3e2d6441afe649bcbb4eab646d0d96fe207e35739ed9bbc006fc9137450889e4775a664c623cfa2ca721284a21b2f0539a2b1451e463c8c784  config-samsung-m33x.aarch64
+2af3f55b52fc166337364fc5c5fe1090fe1a99005fc5a1f62ed69b5a8bb92e6bd49960587a43574f10016c2ff66d8d571973b78028bcd78bc029858baf6bcbb5  0001-abox-fix.patch
 "
