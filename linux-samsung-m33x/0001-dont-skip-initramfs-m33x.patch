@@ -1,0 +1,28 @@
+From 7c5c0a61df36d06285d01450233223127f239cbe Mon Sep 17 00:00:00 2001
+From: fluffball3 <fluffball3@proton.me>
+Date: Fri, 9 May 2025 23:46:49 +0530
+Subject: [PATCH] dont skip initramfs m33x
+
+---
+ init/initramfs.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/init/initramfs.c b/init/initramfs.c
+index a56fc491c276..b6d1fb8b38da 100755
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -621,11 +621,6 @@ static int __init populate_rootfs(void)
+ {
+ 	/* Load the built in initramfs */
+ 	char *err = unpack_to_rootfs(__initramfs_start, __initramfs_size);
+-	if (err)
+-		panic("%s", err); /* Failed to decompress INTERNAL initramfs */
+-
+-	if (!initrd_start || IS_ENABLED(CONFIG_INITRAMFS_FORCE))
+-		goto done;
+ 
+ 	if (IS_ENABLED(CONFIG_BLK_DEV_RAM))
+ 		printk(KERN_INFO "Trying to unpack rootfs image as initramfs...\n");
+-- 
+2.49.0
+

@@ -24,16 +24,16 @@ makedepends="
 	cpio
 	python3
 	linux-headers
-	gcc6
 	android-tools
+	gcc6
 "
 	#clang
 	#clang18
 	#lld18
 	#llvm18
 
-#CC="clang"
-#HOSTCC="clang"
+#CC="clang-17"
+#HOSTCC="clang-17"
 #LLVM=1
 #LLVM_IAS=1
 #CROSS_COMPILE=aarch64-alpine-linux-musl-
@@ -47,12 +47,13 @@ fi
 #0001-Revert-SQUASH-exynos-camera-unify-all-camera-headers.patch
 # Source
 _repository="android_kernel_samsung_m33x"
-_commit="ea68001d2ece043287d2ff4404a2beae6360715a"
+_commit="50d161e3a1e35545d1d6e3194c5498c56d8ac4ba"
 _config="config-$_flavor.$arch"
 source="
 	$pkgname-$_commit.tar.gz::https://github.com/fluffball3/$_repository/archive/$_commit.tar.gz
 	$_config
 	0001-abox-fix.patch
+	0001-dont-skip-initramfs-m33x.patch
 "
 builddir="$srcdir/$_repository-$_commit"
 _outdir="out"
@@ -72,8 +73,22 @@ build() {
 	make O="$_outdir" ARCH="$_carch" CC="${CC:-gcc}" PLATFORM_VERSION=12 TARGET_SOC=s5e8825 \
 		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-postmarketOS"
 	cp $_outdir/arch/$_carch/boot/Image.gz $_outdir/arch/$_carch/boot/Image
+
 	mkdtboimg create "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825bak.dtb" --custom0=0x00000000 --custom1=0xff000000 --version=0 --page_size=2048 "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb"
 	mv "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825bak.dtb" "$_outdir/arch/$_carch/boot/dts/exynos/s5e8825.dtb"
+
+	#dtbodir="$builddir/$_outdir/arch/arm64/boot/dts/"
+	#mkdtboimg create "$dtbodir/dtbo" --page_size=2048 \
+	#	"$dtbodir/exynos/board/erd/s5e8825-erd8825_r11.dtbo" \
+	#	"$dtbodir/exynos/board/erd/s5e8825-erd8825_r10.dtbo" \
+	#	"$dtbodir/exynos/board/erd/s5e8825-erd8825.dtbo" \
+	#	"$dtbodir/exynos/board/univ/s5e8825-universal8825_r00.dtbo" \
+	#	"$dtbodir/samsung/m33x/m33x_eur_open_w00_r01.dtbo" \
+	#	"$dtbodir/samsung/m33x/m33x_eur_open_w00_r02.dtbo" \
+	#	"$dtbodir/samsung/m33x/m33x_eur_open_w00_r00.dtbo"
+
+	#mkdtboimg create "$_outdir/arch/$_carch/boot/dts/dtbobak" --custom0=0x00000000 --custom1=0xff000000 --version=0 --page_size=2048 "$_outdir/arch/$_carch/boot/dts/dtbo"
+	#mv "$_outdir/arch/$_carch/boot/dts/dtbobak" "$_outdir/arch/$_carch/boot/dts/dtbo"
 }
 
 package() {
@@ -83,12 +98,13 @@ package() {
 	make dtbs_install O="$_outdir" ARCH="$_carch" \
 		INSTALL_DTBS_PATH="$pkgdir/boot/dtbs"
 
-	make modules_install O="$_outdir" ARCH="$_carch" INSTALL_MOD_STRIP=1 \
+	make modules_install O="$_outdir" ARCH="$_carch"  INSTALL_MOD_STRIP=1 \
 		INSTALL_MOD_PATH="$pkgdir"
 }
 
 sha512sums="
-b6fe7f6c82b18f62377da447eb613c5ffc9c865eaa81acff143aef0db9515e4a259004e18fad5f2f471b60583851f8733d9ab82621c9b7ef3346ea1f31411e94  linux-samsung-m33x-ea68001d2ece043287d2ff4404a2beae6360715a.tar.gz
-033584afa151bd3e2d6441afe649bcbb4eab646d0d96fe207e35739ed9bbc006fc9137450889e4775a664c623cfa2ca721284a21b2f0539a2b1451e463c8c784  config-samsung-m33x.aarch64
+2fa9f802a18fff920e6e81e9aebf70c629bd59e05677c4a1a3e0b9565a5b090f189cb9eb740f783ec0e5cd3299c7dee5004f876dd2157c524568b69f41d0bac0  linux-samsung-m33x-50d161e3a1e35545d1d6e3194c5498c56d8ac4ba.tar.gz
+7bb8338474d12146721b9176867da2d959108139b19612fff2735f29b2e9e7ab00e81a43752705dc413d52f896de9e6929f56195a7c9cac65cc6c01d2b93ed5a  config-samsung-m33x.aarch64
 2af3f55b52fc166337364fc5c5fe1090fe1a99005fc5a1f62ed69b5a8bb92e6bd49960587a43574f10016c2ff66d8d571973b78028bcd78bc029858baf6bcbb5  0001-abox-fix.patch
+4c8ee2abd8c0ef7e92f93dee631cf2c9ba3ae4deee3eda7c98db8e6e52f83c47ddf40e8a1f345f0dd68f5202ca6d831bcfde54dac4e01de8cfd9dd6dbe88a2af  0001-dont-skip-initramfs-m33x.patch
 "
